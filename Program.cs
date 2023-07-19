@@ -1,7 +1,7 @@
 ﻿namespace cslox;
 static class Program {
-    static bool hadError = false;
-    static void Main(string[] args){
+    static IErrorReporter errorReporter = new ErrorReporter();
+    static void Main(string[] args) {
         if(args.Length > 0) {
             Console.WriteLine("Usage: sclox [script]");
             Environment.ExitCode = 64;
@@ -21,7 +21,7 @@ static class Program {
         }
         string content = File.ReadAllText(path);
         Run(content);
-        if(hadError) {
+        if(errorReporter.HadError) {
             Environment.ExitCode = 65;
         }
     }
@@ -34,14 +34,14 @@ static class Program {
                 break;
             }
             Run(line);
-            if(hadError) {
-                hadError = false;
+            if(errorReporter.HadError) {
+                errorReporter.HadError = false;
             }
         }
     }
 
     static void Run(string source) {
-        var scanner = new Scanner(source);
+        var scanner = new Scanner(errorReporter, source);
         List<Token> tokens = scanner.ScanTokens();
 
         foreach(Token token in tokens) {
@@ -49,12 +49,5 @@ static class Program {
         }
     }
 
-    static void Error(int line, string message) {
-        Report(line, "", message);
-        hadError = true;
-    }
 
-    static void Report(int line, string where, string message) {
-        Console.WriteLine($"[line {line} Error {where}: {message}");
-    }
 }
