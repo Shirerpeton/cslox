@@ -90,6 +90,9 @@ public class Scanner {
                 break;
 
             default:
+                if(IsDigit(c)) {
+                    Number();
+                }
                 errorReporter.ReportError(line, message: "Unexpected character");
                 break;
         }
@@ -134,7 +137,7 @@ public class Scanner {
     bool IsDigit(char c) {
         return c >= '0' && c <= '9'; 
     }
-    void number() {
+    void Number() {
         while(IsDigit(Peek())) {
             Advance();
         }
