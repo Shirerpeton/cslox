@@ -92,6 +92,8 @@ public class Scanner {
             default:
                 if(IsDigit(c)) {
                     Number();
+                } else if(IsAlpha(c)) {
+                    Identifier();
                 }
                 errorReporter.ReportError(line, message: "Unexpected character");
                 break;
@@ -154,6 +156,18 @@ public class Scanner {
             return '\0';
         }
         return source.ElementAt(current + 1);
+    }
+    bool IsAlpha(char c) {
+        return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
+    }
+    bool IsAlphaNumeric(char c) {
+        return IsAlpha(c) || IsDigit(c);
+    }
+    void Identifier() {
+        while(IsAlphaNumeric(Peek())) {
+            Advance();
+        }
+        AddToken(TokenType.Identifier);
     }
     void AddToken(TokenType type) {
         AddToken(type, literal: null);
