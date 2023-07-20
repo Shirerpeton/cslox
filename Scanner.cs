@@ -85,6 +85,10 @@ public class Scanner {
                 line++;
                 break;
 
+            case '"':
+                String();
+                break;
+
             default:
                 errorReporter.ReportError(line, message: "Unexpected character");
                 break;
@@ -108,6 +112,45 @@ public class Scanner {
             return '\0';
         }
         return source.ElementAt(current);
+    }
+    void String() {
+        while(Peek() != '"' && !IsAtEnd) {
+            if(Peek() == '\n') {
+                line++;
+            }
+            Advance();
+        }
+
+        if(IsAtEnd) {
+            errorReporter.ReportError(line, "Unterminated string.");
+            return;
+        }
+
+        Advance();
+
+        string value = source.Substring(start + 1, (current - start) - 2);
+        AddToken(TokenType.String, value);
+    }
+    bool IsDigit(char c) {
+        return c >= '0' && c <= '9'; 
+    }
+    void number() {
+        while(IsDigit(Peek())) {
+            Advance();
+        }
+        if(Peek() == '.' && IsDigit(PeekNext())) {
+            Advance();
+            while(IsDigit(Peek())) {
+                Advance();
+            }
+        }
+        AddToken(TokenType.Number, double.Parse(source.Substring(start, current - start)));
+    }
+    char PeekNext() {
+        if(current + 1 >= source.Length) {
+            return '\0';
+        }
+        return source.ElementAt(current + 1);
     }
     void AddToken(TokenType type) {
         AddToken(type, literal: null);
