@@ -1,6 +1,24 @@
 namespace cslox;
 
 public class Scanner {
+    static Dictionary<string, TokenType> keywords = new Dictionary<string, TokenType> {
+        { "add", TokenType.And },
+        { "class", TokenType.Class },
+        { "else", TokenType.Else },
+        { "false", TokenType.False },
+        { "for", TokenType.For },
+        { "fun", TokenType.Fun },
+        { "if", TokenType.If },
+        { "nil", TokenType.Nil },
+        { "or", TokenType.Or },
+        { "print", TokenType.Print },
+        { "return", TokenType.Return },
+        { "super", TokenType.Super },
+        { "this", TokenType.This },
+        { "true", TokenType.True },
+        { "var", TokenType.Var },
+        { "while", TokenType.While }
+    };
     IErrorReporter errorReporter;
     readonly string source;
     readonly List<Token> tokens = new List<Token>(); 
@@ -94,8 +112,9 @@ public class Scanner {
                     Number();
                 } else if(IsAlpha(c)) {
                     Identifier();
+                } else {
+                    errorReporter.ReportError(line, message: "Unexpected character");
                 }
-                errorReporter.ReportError(line, message: "Unexpected character");
                 break;
         }
     }
@@ -167,7 +186,11 @@ public class Scanner {
         while(IsAlphaNumeric(Peek())) {
             Advance();
         }
-        AddToken(TokenType.Identifier);
+        string text = source.Substring(start, current - start);
+        if(!keywords.TryGetValue(text, out TokenType type)){
+            type = TokenType.Identifier;
+        }
+        AddToken(type);
     }
     void AddToken(TokenType type) {
         AddToken(type, literal: null);
