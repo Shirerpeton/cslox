@@ -3,3 +3,6 @@ indent_stylee = tab
 
 [*.cs]
 csharp_new_line_before_open_brace = false
+csharp_space_after_keywords_in_control_flow_statements = false
+csharp_new_line_before_else = false
+csharp_space_before_colon_in_inheritance_clause = false
