@@ -90,6 +90,8 @@ public class Scanner {
                     while(Peek() != '\n' && !IsAtEnd) {
                         Advance();
                     }
+                } else if(Match('*')) {
+                    BlockComment();
                 } else {
                     AddToken(TokenType.Slash);
                 }
@@ -181,6 +183,27 @@ public class Scanner {
     }
     bool IsAlphaNumeric(char c) {
         return IsAlpha(c) || IsDigit(c);
+    }
+    void BlockComment() {
+        int nestingLevel = 0;
+        while(true) {
+            if(IsAtEnd) {
+                errorReporter.ReportError(line, "Unterminated block comment.");
+                return;
+            }
+            if(Peek() == '/' && PeekNext() == '*') {
+                nestingLevel++;
+            } else if(Peek() == '*' && PeekNext() == '/') {
+                if(nestingLevel <= 0) {
+                    Advance();
+                    Advance();
+                    break;
+                } else {
+                    nestingLevel--;
+                }
+            }
+            Advance();
+        }
     }
     void Identifier() {
         while(IsAlphaNumeric(Peek())) {

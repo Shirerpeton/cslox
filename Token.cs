@@ -1,6 +1,6 @@
 namespace cslox;
 
-public class Token {
+public record Token {
     readonly TokenType type;
     readonly string lexeme;
     readonly object? literal;
