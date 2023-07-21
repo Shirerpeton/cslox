@@ -21,7 +21,7 @@ public class Scanner {
     };
     IErrorReporter errorReporter;
     readonly string source;
-    readonly List<Token> tokens = new List<Token>(); 
+    readonly List<Token> tokens = new List<Token>();
     int start = 0;
     int current = 0;
     int line = 1;
@@ -156,7 +156,7 @@ public class Scanner {
         AddToken(TokenType.String, value);
     }
     bool IsDigit(char c) {
-        return c >= '0' && c <= '9'; 
+        return c >= '0' && c <= '9';
     }
     void Number() {
         while(IsDigit(Peek())) {
@@ -187,7 +187,7 @@ public class Scanner {
             Advance();
         }
         string text = source.Substring(start, current - start);
-        if(!keywords.TryGetValue(text, out TokenType type)){
+        if(!keywords.TryGetValue(text, out TokenType type)) {
             type = TokenType.Identifier;
         }
         AddToken(type);
