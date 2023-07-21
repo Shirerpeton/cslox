@@ -187,6 +187,9 @@ public class Scanner {
     void BlockComment() {
         int nestingLevel = 0;
         while(true) {
+            if(Peek() == '\n') {
+                line++;
+            }
             if(IsAtEnd) {
                 errorReporter.ReportError(line, "Unterminated block comment.");
                 return;
