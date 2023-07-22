@@ -24,6 +24,7 @@ public class Parser {
     }
     Expr.Expr CompositeExpr() {
         return LABinaryProduction(Conditional,
+            new TokenType[] { TokenType.Comma },
             new TokenType[] { TokenType.Comma });
     }
     Expr.Expr Conditional() {
@@ -41,24 +42,33 @@ public class Parser {
     }
     Expr.Expr Equality() {
         return LABinaryProduction(Comparison,
-            new TokenType[] { TokenType.BangEqual, TokenType.EqualEqual });
+            new TokenType[] { TokenType.BangEqual, TokenType.EqualEqual },
+            new TokenType[] { TokenType.BangEqual, TokenType.EqualEqual});
     }
     Expr.Expr Comparison() {
         return LABinaryProduction(Term,
+            new TokenType[] { TokenType.Less, TokenType.LessEqual, TokenType.Greater, TokenType.GreaterEqual },
             new TokenType[] { TokenType.Less, TokenType.LessEqual, TokenType.Greater, TokenType.GreaterEqual });
     }
     Expr.Expr Term() {
         return LABinaryProduction(Factor,
-            new TokenType[] { TokenType.Minus, TokenType.Plus });
+            new TokenType[] { TokenType.Minus, TokenType.Plus },
+            new TokenType[] { TokenType.Plus });
     }
     Expr.Expr Factor() {
         return LABinaryProduction(Unary,
+            new TokenType[] { TokenType.Slash, TokenType.Star },
             new TokenType[] { TokenType.Slash, TokenType.Star });
     }
     //Helper for left-associated binary productions
-    Expr.Expr LABinaryProduction(Func<Expr.Expr> nextProduction, TokenType[] tokenTypes) {
+    Expr.Expr LABinaryProduction(Func<Expr.Expr> nextProduction, TokenType[] operatorTypes, TokenType[]? pureBinaryOperatorTypes = null) {
+        if(pureBinaryOperatorTypes != null && Match(pureBinaryOperatorTypes)) {
+            ParseError error = Error(Previous, "Binary operator without left-hand side.");
+            nextProduction(); 
+            throw error;
+        }
         Expr.Expr expr = nextProduction();
-        while(Match(tokenTypes)) {
+        while(Match(operatorTypes)) {
             Token opr = Previous;
             Expr.Expr right = nextProduction();
             expr = new Expr.Binary(expr, opr, right);
