@@ -7,6 +7,13 @@ public class AstPrinter: Expr.IVisitor<String>, Stmt.IVisitor {
             statement.Accept(this);
         }
     }
+    public void VisitBlockStmt(Stmt.Block stmt) {
+        Console.WriteLine("{");
+        foreach(Stmt.Stmt statement in stmt.statements) {
+            statement.Accept(this);
+        }
+        Console.WriteLine("}");
+    }
     public void VisitPrintStmt(Stmt.Print stmt) {
         Console.WriteLine($"print {stmt.expression.Accept(this)};");
     }

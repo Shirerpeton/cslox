@@ -47,12 +47,26 @@ public class Parser {
         if(Match(new TokenType[] { TokenType.Print })) {
             return PrintStatement();
         }
+        if(Match(new TokenType[] { TokenType.LeftBrace })) {
+            return new Stmt.Block(Block());
+        }
         return ExpressionStatement();
     }
     Stmt.Stmt PrintStatement() {
         Expr.Expr value = Expression();
         Consume(TokenType.Semicolon, "Expect ';' after value.");
         return new Stmt.Print(value);
+    }
+    List<Stmt.Stmt> Block() {
+        var statements = new List<Stmt.Stmt>();
+        while(!Check(TokenType.RightBrace) && !IsAtEnd) {
+            Stmt.Stmt? declaration = Declaration();
+            if(declaration != null) {
+                statements.Add(declaration);
+            }
+        }
+        Consume(TokenType.RightBrace, "Expect '}' after block.");
+        return statements;
     }
     Stmt.Stmt ExpressionStatement() {
         Expr.Expr expr = Expression();

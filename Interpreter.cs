@@ -2,7 +2,7 @@ namespace cslox;
 
 public class Interpreter: Expr.IVisitor<object?>, Stmt.IVisitor {
     readonly IErrorReporter errorReporter;
-    readonly Environment environment = new Environment();
+    Environment environment = new Environment();
     public Interpreter(IErrorReporter errorReporter) {
         this.errorReporter = errorReporter;
     }
@@ -19,8 +19,22 @@ public class Interpreter: Expr.IVisitor<object?>, Stmt.IVisitor {
     void Execute(Stmt.Stmt stmt) {
         stmt.Accept(this);
     }
+    void ExecuteBlock(List<Stmt.Stmt> statements, Environment environment) {
+        Environment previous = this.environment;
+        try {
+            this.environment = environment;
+            foreach(Stmt.Stmt statement in statements) {
+                Execute(statement);
+            }
+        } finally {
+            this.environment = previous;
+        }
+    }
     object? Evaluate(Expr.Expr expr) {
         return expr.Accept(this);
+    }
+    public void VisitBlockStmt(Stmt.Block stmt) {
+        ExecuteBlock(stmt.statements, new Environment(environment));
     }
     public void VisitVarStmt(Stmt.Var stmt) {
         object? value = null;

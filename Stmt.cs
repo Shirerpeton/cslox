@@ -5,9 +5,20 @@ public abstract class Stmt {
 }
 
 public interface IVisitor {
+    void VisitBlockStmt(Block stmt);
     void VisitExpressionStmt(Expression stmt);
     void VisitPrintStmt(Print stmt);
     void VisitVarStmt(Var stmt);
+}
+
+public class Block: Stmt {
+    public List<Stmt> statements;
+    public Block(List<Stmt> statements) {
+        this.statements = statements;
+    }
+    public override void Accept(IVisitor visitor) {
+        visitor.VisitBlockStmt(this);
+    }
 }
 
 public class Expression: Stmt {
