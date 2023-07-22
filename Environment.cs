@@ -1,17 +1,26 @@
 namespace cslox;
 
+public record struct VariableValue {
+    public required object? value;
+    public required bool initialized;
+}
+
 public class Environment {
     Environment? enclosing;
-    readonly Dictionary<string, object?> values = new Dictionary<string, object?>();
+    readonly Dictionary<string, VariableValue> values = new Dictionary<string, VariableValue>();
     public Environment(Environment? enclosing = null) {
         this.enclosing = enclosing;
     }
-    public void Define(string name, object? value) {
-        values.Add(name, value);
+    public void Define(string name, bool initialize, object? value) {
+        var variableValue = new VariableValue { initialized = initialize, value = value };
+        values.Add(name, variableValue);
     }
     public object? Get(Token name) {
-        if(values.TryGetValue(name.lexeme, out object? value)) {
-            return value;
+        if(values.TryGetValue(name.lexeme, out VariableValue value)) {
+            if(!value.initialized) {
+                throw new RuntimeError(name, $"Unassigned variable {name.lexeme} used.");
+            }
+            return value.value;
         }
         if(enclosing != null) {
             return enclosing.Get(name);
@@ -20,7 +29,8 @@ public class Environment {
     }
     public void Assign(Token name, object? value) {
         if(values.TryGetValue(name.lexeme, out _)) {
-            values[name.lexeme] = value;
+            var variableValue = new VariableValue { initialized = true, value = value };
+            values[name.lexeme] = variableValue;
             return;
         }
         if(enclosing != null) {

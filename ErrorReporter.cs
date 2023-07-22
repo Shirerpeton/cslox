@@ -27,7 +27,6 @@ public class ErrorReporter: IErrorReporter {
 [line {error.token.line}]");
         HadRuntimeError = true;
     }
-
     void Print(int line, string where, string message) {
         Console.WriteLine($"[line {line} Error {where}: {message}]");
     }

@@ -42,7 +42,7 @@ public class Interpreter: Expr.IVisitor<object?>, Stmt.IVisitor {
         if(stmt.initializer != null) {
             value = Evaluate(stmt.initializer);
         }
-        environment.Define(stmt.name.lexeme, value);
+        environment.Define(stmt.name.lexeme, stmt.initializer != null, value);
     }
     public void VisitExpressionStmt(Stmt.Expression stmt) {
         Evaluate(stmt.expression);
