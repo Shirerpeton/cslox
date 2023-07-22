@@ -15,7 +15,8 @@ public class Parser {
     public Expr.Expr? Parse() {
         try {
             return Expression();
-        } catch(ParseError) {
+        } catch(ParseError parseError) {
+            errorReporter.ReportError(parseError.token, parseError.message);
             return null;
         }
     }
@@ -24,7 +25,6 @@ public class Parser {
     }
     Expr.Expr CompositeExpr() {
         return LABinaryProduction(Conditional,
-            new TokenType[] { TokenType.Comma },
             new TokenType[] { TokenType.Comma });
     }
     Expr.Expr Conditional() {
@@ -42,38 +42,41 @@ public class Parser {
     }
     Expr.Expr Equality() {
         return LABinaryProduction(Comparison,
-            new TokenType[] { TokenType.BangEqual, TokenType.EqualEqual },
-            new TokenType[] { TokenType.BangEqual, TokenType.EqualEqual});
+            new TokenType[] { TokenType.BangEqual, TokenType.EqualEqual });
     }
     Expr.Expr Comparison() {
         return LABinaryProduction(Term,
-            new TokenType[] { TokenType.Less, TokenType.LessEqual, TokenType.Greater, TokenType.GreaterEqual },
             new TokenType[] { TokenType.Less, TokenType.LessEqual, TokenType.Greater, TokenType.GreaterEqual });
     }
     Expr.Expr Term() {
         return LABinaryProduction(Factor,
-            new TokenType[] { TokenType.Minus, TokenType.Plus },
-            new TokenType[] { TokenType.Plus });
+            new TokenType[] { TokenType.Minus, TokenType.Plus });
     }
     Expr.Expr Factor() {
         return LABinaryProduction(Unary,
-            new TokenType[] { TokenType.Slash, TokenType.Star },
             new TokenType[] { TokenType.Slash, TokenType.Star });
     }
     //Helper for left-associated binary productions
-    Expr.Expr LABinaryProduction(Func<Expr.Expr> nextProduction, TokenType[] operatorTypes, TokenType[]? pureBinaryOperatorTypes = null) {
-        if(pureBinaryOperatorTypes != null && Match(pureBinaryOperatorTypes)) {
-            ParseError error = Error(Previous, "Binary operator without left-hand side.");
-            nextProduction(); 
-            throw error;
+    Expr.Expr LABinaryProduction(Func<Expr.Expr> nextProduction, TokenType[] operatorTypes) {
+        Expr.Expr expr;
+        if(operatorTypes.Contains(Peek.type)) {
+            try {
+                return Unary();
+            } catch(ParseError) {
+                ParseError error = Error(Peek, "Binary operator without left-hand side.");
+                Advance();
+                nextProduction(); 
+                throw error;
+            }
+        } else {
+            expr = nextProduction();
+            while(Match(operatorTypes)) {
+                Token opr = Previous;
+                Expr.Expr right = nextProduction();
+                expr = new Expr.Binary(expr, opr, right);
+            }
+            return expr;
         }
-        Expr.Expr expr = nextProduction();
-        while(Match(operatorTypes)) {
-            Token opr = Previous;
-            Expr.Expr right = nextProduction();
-            expr = new Expr.Binary(expr, opr, right);
-        }
-        return expr;
     }
     Expr.Expr Unary() {
         if(Match(new TokenType[] { TokenType.Bang, TokenType.Minus })) {
@@ -131,8 +134,7 @@ public class Parser {
         throw Error(Peek, message); 
     }
     ParseError Error(Token token, string message) {
-        errorReporter.ReportError(token, message);
-        return new ParseError();
+        return new ParseError(token, message);
     }
     void Syncronize() {
         Advance();
