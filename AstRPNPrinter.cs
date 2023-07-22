@@ -20,7 +20,7 @@ public class AstRPNPrinter: Expr.IVisitor<String> {
         return RPNPrint(expr.opr.lexeme, new Expr.Expr[] { expr.left, expr.right });
     } 
     public string VisitGroupingExpr(Expr.Grouping expr) {
-        return RPNPrint("group", new Expr.Expr[] { expr.expression });
+        return  expr.expression.Accept(this);
     } 
     public string VisitLiteralExpr(Expr.Literal expr) {
         if(expr.value == null) {
