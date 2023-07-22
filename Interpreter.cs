@@ -1,18 +1,38 @@
 namespace cslox;
 
-public class Interpreter: Expr.IVisitor<object?> {
+public class Interpreter: Expr.IVisitor<object?>, Stmt.IVisitor {
     readonly IErrorReporter errorReporter;
     public Interpreter(IErrorReporter errorReporter) {
         this.errorReporter = errorReporter;
     }
-    public void Interpret(Expr.Expr expr) {
+    public void Interpret(List<Stmt.Stmt> statements) {
         try {
-            object? value = Evaluate(expr);
-            Console.WriteLine(Stringify(value));
+            foreach(var statement in statements) {
+                Execute(statement);
+            }
         }
         catch(RuntimeError error) {
             errorReporter.RuntimeError(error);
         }
+    }
+    void Execute(Stmt.Stmt stmt) {
+        stmt.Accept(this);
+    }
+    object? Evaluate(Expr.Expr expr) {
+        return expr.Accept(this);
+    }
+    public void VisitVarStmt(Stmt.Var stmt) {
+        Execute(stmt);
+    }
+    public void VisitExpressionStmt(Stmt.Expression stmt) {
+        Evaluate(stmt.expression);
+    }
+    public void VisitPrintStmt(Stmt.Print stmt) {
+        object? value = Evaluate(stmt.expression);
+        Console.WriteLine(Stringify(value));
+    }
+    public object? VisitVariableExpr(Expr.Variable expr) {
+        return Evaluate(expr);
     }
     public object? VisitLiteralExpr(Expr.Literal expr) {
         return expr.value;
@@ -77,9 +97,6 @@ public class Interpreter: Expr.IVisitor<object?> {
                 return !IsEqual(left, right);
         }
         return null;
-    }
-    object? Evaluate(Expr.Expr expr) {
-        return expr.Accept(this);
     }
     bool IsTruthy(object? obj) {
         if(obj == null) {

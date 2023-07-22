@@ -12,13 +12,55 @@ public class Parser {
         this.errorReporter = errorReporter;
         this.tokens = tokens;
     }
-    public Expr.Expr? Parse() {
+    public List<Stmt.Stmt> Parse() {
+        var statements = new List<Stmt.Stmt>();
+        while(!IsAtEnd) {
+            Stmt.Stmt? declaration = Declaration();
+            if(declaration != null) {
+                statements.Add(declaration);
+            }
+        }
+        return statements;
+    }
+    Stmt.Stmt? Declaration() {
         try {
-            return Expression();
+            if(Match(new TokenType[] { TokenType.Var })) {
+                return VarDeclaration();
+            }
+            return Statement();
         }
         catch(ParseError) {
+            Syncronize();
             return null;
         }
+    }
+    Stmt.Stmt VarDeclaration() {
+        Token name = Consume(TokenType.Identifier, "Expect variable name.");
+        Expr.Expr? initializer = null;
+        if(Match(new TokenType[] { TokenType.Equal })) {
+            initializer = Expression();
+        }
+        Consume(TokenType.Semicolon, "Expect ';' after variable declaration.");
+        if(initializer == null) {
+            throw Error(Previous, "No variable initializer.");
+        }
+        return new Stmt.Var(name, initializer);
+    }
+    Stmt.Stmt Statement() {
+        if(Match(new TokenType[] { TokenType.Print })) {
+            return PrintStatement();
+        }
+        return ExpressionStatement();
+    }
+    Stmt.Stmt PrintStatement() {
+        Expr.Expr value = Expression();
+        Consume(TokenType.Semicolon, "Expect ';' after value.");
+        return new Stmt.Print(value);
+    }
+    Stmt.Stmt ExpressionStatement() {
+        Expr.Expr expr = Expression();
+        Consume(TokenType.Semicolon, "Expect ';' after expression.");
+        return new Stmt.Expression(expr);
     }
     Expr.Expr Expression() {
         return Equality();
@@ -79,6 +121,9 @@ public class Parser {
         }
         if(Match(new TokenType[] { TokenType.Number, TokenType.String })) {
             return new Expr.Literal(Previous.literal);
+        }
+        if(Match(new TokenType[] { TokenType.Identifier })) {
+            return new Expr.Variable(Previous);
         }
         if(Match(new TokenType[] { TokenType.LeftParen })) {
             Expr.Expr expr = Expression();

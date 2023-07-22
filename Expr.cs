@@ -9,6 +9,7 @@ public interface IVisitor<R> {
     R VisitGroupingExpr(Grouping expr);
     R VisitLiteralExpr(Literal expr);
     R VisitUnaryExpr(Unary expr);
+    R VisitVariableExpr(Variable expr);
 }
 
 public class Binary: Expr {
@@ -54,6 +55,16 @@ public class Unary: Expr {
     }
     public override R Accept<R>(IVisitor<R> visitor) {
         return visitor.VisitUnaryExpr(this);
+    }
+}
+
+public class Variable: Expr {
+    public Token name;
+    public Variable(Token name) {
+        this.name = name;
+    }
+    public override R Accept<R>(IVisitor<R> visitor) {
+        return visitor.VisitVariableExpr(this);
     }
 }
 

@@ -50,16 +50,14 @@ static class Program {
             return;
         }
         Parser parser = new Parser(errorReporter, tokens);
-        Expr.Expr? tree = parser.Parse();
+        List<Stmt.Stmt> statements = parser.Parse();
         if(errorReporter.HadError) {
             return;
         }
-        if(tree == null) {
-            errorReporter.ReportError(0, "Empty AST.");
-            return;
-        }
-        Interpreter interpreter = new Interpreter(errorReporter);
-        interpreter.Interpret(tree);
+        var astPrinter = new AstPrinter();
+        astPrinter.Print(statements);
+        //Interpreter interpreter = new Interpreter(errorReporter);
+        //interpreter.Interpret(statements);
     }
 
 
