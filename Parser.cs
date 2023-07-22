@@ -3,14 +3,16 @@ namespace cslox;
 public class Parser {
     readonly List<Token> tokens;
     readonly IErrorReporter errorReporter;
+    readonly bool isRepl = false;
     int current = 0;
     bool IsAtEnd => Peek.type == TokenType.EOF;
     Token Peek => tokens.ElementAt(current);
     Token Previous => tokens.ElementAt(current - 1);
 
-    public Parser(IErrorReporter errorReporter, List<Token> tokens) {
+    public Parser(IErrorReporter errorReporter, List<Token> tokens, bool isRepl = false) {
         this.errorReporter = errorReporter;
         this.tokens = tokens;
+        this.isRepl = isRepl;
     }
     public List<Stmt.Stmt> Parse() {
         var statements = new List<Stmt.Stmt>();
@@ -70,8 +72,12 @@ public class Parser {
     }
     Stmt.Stmt ExpressionStatement() {
         Expr.Expr expr = Expression();
-        Consume(TokenType.Semicolon, "Expect ';' after expression.");
-        return new Stmt.Expression(expr);
+        if(!isRepl) {
+            Consume(TokenType.Semicolon, "Expect ';' after expression.");
+            return new Stmt.Expression(expr);
+        } else {
+            return new Stmt.Print(expr);
+        }
     }
     Expr.Expr Expression() {
         return Assignment();

@@ -36,20 +36,20 @@ static class Program {
             if(string.IsNullOrEmpty(line)) {
                 break;
             }
-            Run(line);
+            Run(line, isRepl: true);
             if(errorReporter.HadError) {
                 errorReporter.HadError = false;
             }
         }
     }
 
-    static void Run(string source) {
+    static void Run(string source, bool isRepl = false) {
         var scanner = new Scanner(errorReporter, source);
         List<Token> tokens = scanner.ScanTokens();
         if(errorReporter.HadError) {
             return;
         }
-        Parser parser = new Parser(errorReporter, tokens);
+        Parser parser = new Parser(errorReporter, tokens, isRepl);
         List<Stmt.Stmt> statements = parser.Parse();
         if(errorReporter.HadError) {
             return;
