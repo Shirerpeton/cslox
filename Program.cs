@@ -24,6 +24,9 @@ static class Program {
         if(errorReporter.HadError) {
             Environment.ExitCode = 65;
         }
+        if(errorReporter.HadRuntimeError) {
+            Environment.ExitCode = 70;
+        }
     }
 
     static void RunPrompt() {
@@ -55,7 +58,8 @@ static class Program {
             errorReporter.ReportError(0, "Empty AST.");
             return;
         }
-        Console.WriteLine(new AstPrinter().Print(tree));
+        Interpreter interpreter = new Interpreter(errorReporter);
+        interpreter.Interpret(tree);
     }
 
 

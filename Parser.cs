@@ -131,7 +131,7 @@ public class Parser {
         if(Check(type)) {
             return Advance();
         }
-        throw Error(Peek, message); 
+        throw Error(Peek, message);
     }
     ParseError Error(Token token, string message) {
         return new ParseError(token, message);
