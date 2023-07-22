@@ -32,8 +32,8 @@ public class Print: Stmt {
 
 public class Var: Stmt {
     public Token name;
-    public Expr.Expr initializer;
-    public Var(Token name, Expr.Expr initializer) {
+    public Expr.Expr? initializer;
+    public Var(Token name, Expr.Expr? initializer) {
         this.name = name;
         this.initializer = initializer;
     }

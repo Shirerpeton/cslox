@@ -41,9 +41,6 @@ public class Parser {
             initializer = Expression();
         }
         Consume(TokenType.Semicolon, "Expect ';' after variable declaration.");
-        if(initializer == null) {
-            throw Error(Previous, "No variable initializer.");
-        }
         return new Stmt.Var(name, initializer);
     }
     Stmt.Stmt Statement() {

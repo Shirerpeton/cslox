@@ -1,7 +1,6 @@
 using System.Text;
 
 namespace cslox;
-
 public class AstPrinter: Expr.IVisitor<String>, Stmt.IVisitor {
     public void Print(List<Stmt.Stmt> statements) {
         foreach(var statement in statements) {
@@ -15,7 +14,11 @@ public class AstPrinter: Expr.IVisitor<String>, Stmt.IVisitor {
         Console.WriteLine($"{stmt.expression.Accept(this)};");
     }
     public void VisitVarStmt(Stmt.Var stmt) {
-        Console.WriteLine($"var {stmt.name} = {stmt.initializer.Accept(this)};");
+        if(stmt.initializer != null) {
+            Console.WriteLine($"var {stmt.name} = {stmt.initializer.Accept(this)};");
+        } else {
+            Console.WriteLine($"var {stmt.name};");
+        }
     }
     public string Print(Expr.Expr expr) {
         return expr.Accept(this);
@@ -46,6 +49,6 @@ public class AstPrinter: Expr.IVisitor<String>, Stmt.IVisitor {
         return Parenthesize(expr.opr.lexeme, new Expr.Expr[] { expr.right });
     }
     public string VisitVariableExpr(Expr.Variable expr) {
-        return Parenthesize("var", new Expr.Expr[] { expr });
+        return expr.name.lexeme;
     }
 }

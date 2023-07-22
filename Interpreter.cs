@@ -2,6 +2,7 @@ namespace cslox;
 
 public class Interpreter: Expr.IVisitor<object?>, Stmt.IVisitor {
     readonly IErrorReporter errorReporter;
+    readonly Environment environment = new Environment();
     public Interpreter(IErrorReporter errorReporter) {
         this.errorReporter = errorReporter;
     }
@@ -22,7 +23,11 @@ public class Interpreter: Expr.IVisitor<object?>, Stmt.IVisitor {
         return expr.Accept(this);
     }
     public void VisitVarStmt(Stmt.Var stmt) {
-        Execute(stmt);
+        object? value = null;
+        if(stmt.initializer != null) {
+            value = Evaluate(stmt.initializer);
+        }
+        environment.Define(stmt.name.lexeme, value);
     }
     public void VisitExpressionStmt(Stmt.Expression stmt) {
         Evaluate(stmt.expression);
@@ -32,7 +37,7 @@ public class Interpreter: Expr.IVisitor<object?>, Stmt.IVisitor {
         Console.WriteLine(Stringify(value));
     }
     public object? VisitVariableExpr(Expr.Variable expr) {
-        return Evaluate(expr);
+        return environment.Get(expr.name);
     }
     public object? VisitLiteralExpr(Expr.Literal expr) {
         return expr.value;
