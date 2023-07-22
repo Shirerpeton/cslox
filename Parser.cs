@@ -60,7 +60,20 @@ public class Parser {
         return new Stmt.Expression(expr);
     }
     Expr.Expr Expression() {
-        return Equality();
+        return Assignment();
+    }
+    Expr.Expr Assignment() {
+        Expr.Expr expr = Equality();
+        if(Match(new TokenType[] { TokenType.Equal })) {
+            Token equals = Previous;
+            Expr.Expr value = Assignment();
+            if(expr is Expr.Variable exprVariable) {
+                Token name = exprVariable.name;
+                return new Expr.Assign(name, value);
+            }
+            Error(equals, "Invalid assignment target.");
+        }
+        return expr;
     }
     Expr.Expr Equality() {
         Expr.Expr expr = Comparison();

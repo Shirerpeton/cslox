@@ -36,6 +36,11 @@ public class Interpreter: Expr.IVisitor<object?>, Stmt.IVisitor {
         object? value = Evaluate(stmt.expression);
         Console.WriteLine(Stringify(value));
     }
+    public object? VisitAssignExpr(Expr.Assign expr) {
+        object? value = Evaluate(expr.value);
+        environment.Assign(expr.name, value);
+        return value;
+    }
     public object? VisitVariableExpr(Expr.Variable expr) {
         return environment.Get(expr.name);
     }

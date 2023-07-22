@@ -51,4 +51,7 @@ public class AstPrinter: Expr.IVisitor<String>, Stmt.IVisitor {
     public string VisitVariableExpr(Expr.Variable expr) {
         return expr.name.lexeme;
     }
+    public string VisitAssignExpr(Expr.Assign expr) {
+        return Parenthesize($"assign {expr.name} ", new Expr.Expr[] { expr.value });
+    }
 }
