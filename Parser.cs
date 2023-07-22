@@ -12,16 +12,82 @@ public class Parser {
         this.errorReporter = errorReporter;
         this.tokens = tokens;
     }
-    public Expr.Expr? Parse() {
+    public List<Stmt.Stmt> Parse() {
+        var statements = new List<Stmt.Stmt>();
+        while(!IsAtEnd) {
+            Stmt.Stmt? declaration = Declaration();
+            if(declaration != null) {
+                statements.Add(declaration);
+            }
+        }
+        return statements;
+    }
+    Stmt.Stmt? Declaration() {
         try {
-            return Expression();
-        } catch(ParseError parseError) {
-            errorReporter.ReportError(parseError.token, parseError.message);
+            if(Match(new TokenType[] { TokenType.Var })) {
+                return VarDeclaration();
+            }
+            return Statement();
+        }
+        catch(ParseError) {
+            Syncronize();
             return null;
         }
     }
+    Stmt.Stmt VarDeclaration() {
+        Token name = Consume(TokenType.Identifier, "Expect variable name.");
+        Expr.Expr? initializer = null;
+        if(Match(new TokenType[] { TokenType.Equal })) {
+            initializer = Expression();
+        }
+        Consume(TokenType.Semicolon, "Expect ';' after variable declaration.");
+        return new Stmt.Var(name, initializer);
+    }
+    Stmt.Stmt Statement() {
+        if(Match(new TokenType[] { TokenType.Print })) {
+            return PrintStatement();
+        }
+        if(Match(new TokenType[] { TokenType.LeftBrace })) {
+            return new Stmt.Block(Block());
+        }
+        return ExpressionStatement();
+    }
+    Stmt.Stmt PrintStatement() {
+        Expr.Expr value = Expression();
+        Consume(TokenType.Semicolon, "Expect ';' after value.");
+        return new Stmt.Print(value);
+    }
+    List<Stmt.Stmt> Block() {
+        var statements = new List<Stmt.Stmt>();
+        while(!Check(TokenType.RightBrace) && !IsAtEnd) {
+            Stmt.Stmt? declaration = Declaration();
+            if(declaration != null) {
+                statements.Add(declaration);
+            }
+        }
+        Consume(TokenType.RightBrace, "Expect '}' after block.");
+        return statements;
+    }
+    Stmt.Stmt ExpressionStatement() {
+        Expr.Expr expr = Expression();
+        Consume(TokenType.Semicolon, "Expect ';' after expression.");
+        return new Stmt.Expression(expr);
+    }
     Expr.Expr Expression() {
-        return CompositeExpr();
+        return Assignment();
+    }
+    Expr.Expr Assignment() {
+        Expr.Expr expr = CompositeExpr();
+        if(Match(new TokenType[] { TokenType.Equal })) {
+            Token equals = Previous;
+            Expr.Expr value = Assignment();
+            if(expr is Expr.Variable exprVariable) {
+                Token name = exprVariable.name;
+                return new Expr.Assign(name, value);
+            }
+            Error(equals, "Invalid assignment target.");
+        }
+        return expr;
     }
     Expr.Expr CompositeExpr() {
         return LABinaryProduction(Conditional,
@@ -62,10 +128,11 @@ public class Parser {
         if(operatorTypes.Contains(Peek.type)) {
             try {
                 return Unary();
-            } catch(ParseError) {
+            }
+            catch(ParseError) {
                 ParseError error = Error(Peek, "Binary operator without left-hand side.");
                 Advance();
-                nextProduction(); 
+                nextProduction();
                 throw error;
             }
         } else {
@@ -98,6 +165,9 @@ public class Parser {
         }
         if(Match(new TokenType[] { TokenType.Number, TokenType.String })) {
             return new Expr.Literal(Previous.literal);
+        }
+        if(Match(new TokenType[] { TokenType.Identifier })) {
+            return new Expr.Variable(Previous);
         }
         if(Match(new TokenType[] { TokenType.LeftParen })) {
             Expr.Expr expr = Expression();
@@ -134,7 +204,8 @@ public class Parser {
         throw Error(Peek, message);
     }
     ParseError Error(Token token, string message) {
-        return new ParseError(token, message);
+        errorReporter.ReportError(token, message);
+        return new ParseError();
     }
     void Syncronize() {
         Advance();

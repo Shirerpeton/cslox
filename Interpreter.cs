@@ -1,18 +1,63 @@
 namespace cslox;
 
-public class Interpreter: Expr.IVisitor<object?> {
+public class Interpreter: Expr.IVisitor<object?>, Stmt.IVisitor {
     readonly IErrorReporter errorReporter;
+    Environment environment = new Environment();
     public Interpreter(IErrorReporter errorReporter) {
         this.errorReporter = errorReporter;
     }
-    public void Interpret(Expr.Expr expr) {
+    public void Interpret(List<Stmt.Stmt> statements) {
         try {
-            object? value = Evaluate(expr);
-            Console.WriteLine(Stringify(value));
+            foreach(var statement in statements) {
+                Execute(statement);
+            }
         }
         catch(RuntimeError error) {
             errorReporter.RuntimeError(error);
         }
+    }
+    void Execute(Stmt.Stmt stmt) {
+        stmt.Accept(this);
+    }
+    void ExecuteBlock(List<Stmt.Stmt> statements, Environment environment) {
+        Environment previous = this.environment;
+        try {
+            this.environment = environment;
+            foreach(Stmt.Stmt statement in statements) {
+                Execute(statement);
+            }
+        }
+        finally {
+            this.environment = previous;
+        }
+    }
+    object? Evaluate(Expr.Expr expr) {
+        return expr.Accept(this);
+    }
+    public void VisitBlockStmt(Stmt.Block stmt) {
+        ExecuteBlock(stmt.statements, new Environment(environment));
+    }
+    public void VisitVarStmt(Stmt.Var stmt) {
+        object? value = null;
+        if(stmt.initializer != null) {
+            value = Evaluate(stmt.initializer);
+        }
+        environment.Define(stmt.name.lexeme, value);
+    }
+    public void VisitExpressionStmt(Stmt.Expression stmt) {
+        Evaluate(stmt.expression);
+    }
+    public void VisitPrintStmt(Stmt.Print stmt) {
+        object? value = Evaluate(stmt.expression);
+        Console.WriteLine(Stringify(value));
+    }
+    public object? VisitAssignExpr(Expr.Assign expr) {
+        object? value = Evaluate(expr.value);
+        environment.Assign(expr.name, value);
+        return value;
+    }
+    public object? VisitVariableExpr(Expr.Variable expr) {
+        return environment.Get(expr.name);
     }
     public object? VisitLiteralExpr(Expr.Literal expr) {
         return expr.value;
@@ -40,18 +85,18 @@ public class Interpreter: Expr.IVisitor<object?> {
                     return leftDouble - rightDouble;
                 }
             case TokenType.Plus: {
-                if(left is double leftDouble && right is double rightDouble) {
-                    return leftDouble + rightDouble;
-                }
-                if(left is string leftString && right is string rightString) {
-                    return leftString + rightString;
-                } /*else if(left is string leftString1) {
+                    if(left is double leftDouble && right is double rightDouble) {
+                        return leftDouble + rightDouble;
+                    }
+                    if(left is string leftString && right is string rightString) {
+                        return leftString + rightString;
+                    } /*else if(left is string leftString1) {
                     return leftString1 + Stringify(right);
                 } else if(right is string rigthString1) {
                     return Stringify(left) + rigthString1;
                 }*/
-                throw new RuntimeError(expr.opr, "Operands must be two number or two string.");
-            }
+                    throw new RuntimeError(expr.opr, "Operands must be two number or two string.");
+                }
             case TokenType.Slash: {
                     (double leftDouble, double rightDouble) = CheckNumberOperands(expr.opr, left, right);
                     if(rightDouble == 0) {
@@ -98,9 +143,6 @@ public class Interpreter: Expr.IVisitor<object?> {
             }
         }
         return null;
-    }
-    object? Evaluate(Expr.Expr expr) {
-        return expr.Accept(this);
     }
     bool IsTruthy(object? obj) {
         if(obj == null) {

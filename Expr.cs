@@ -5,11 +5,25 @@ public abstract class Expr {
 }
 
 public interface IVisitor<R> {
+    R VisitAssignExpr(Assign expr);
     R VisitTernaryExpr(Ternary expr);
     R VisitBinaryExpr(Binary expr);
     R VisitGroupingExpr(Grouping expr);
     R VisitLiteralExpr(Literal expr);
     R VisitUnaryExpr(Unary expr);
+    R VisitVariableExpr(Variable expr);
+}
+
+public class Assign: Expr {
+    public Token name;
+    public Expr value;
+    public Assign(Token name, Expr value) {
+        this.name = name;
+        this.value = value;
+    }
+    public override R Accept<R>(IVisitor<R> visitor) {
+        return visitor.VisitAssignExpr(this);
+    }
 }
 
 public class Ternary: Expr {
@@ -71,6 +85,16 @@ public class Unary: Expr {
     }
     public override R Accept<R>(IVisitor<R> visitor) {
         return visitor.VisitUnaryExpr(this);
+    }
+}
+
+public class Variable: Expr {
+    public Token name;
+    public Variable(Token name) {
+        this.name = name;
+    }
+    public override R Accept<R>(IVisitor<R> visitor) {
+        return visitor.VisitVariableExpr(this);
     }
 }
 
