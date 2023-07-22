@@ -17,6 +17,9 @@ public class AstPrinter: Expr.IVisitor<String> {
         return builder.ToString();
     }
 
+    public string VisitTernaryExpr(Expr.Ternary expr) {
+        return Parenthesize(expr.opr.lexeme, new Expr.Expr[] { expr.first, expr.second, expr.third });
+    }
     public string VisitBinaryExpr(Expr.Binary expr) {
         return Parenthesize(expr.opr.lexeme, new Expr.Expr[] { expr.left, expr.right });
     }

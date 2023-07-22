@@ -16,6 +16,9 @@ public class AstRPNPrinter: Expr.IVisitor<String> {
         return builder.ToString();
     }
 
+    public string VisitTernaryExpr(Expr.Ternary expr) {
+        return RPNPrint(expr.opr.lexeme, new Expr.Expr[] { expr.first, expr.second, expr.third });
+    }
     public string VisitBinaryExpr(Expr.Binary expr) {
         return RPNPrint(expr.opr.lexeme, new Expr.Expr[] { expr.left, expr.right });
     } 

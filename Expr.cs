@@ -5,10 +5,27 @@ public abstract class Expr {
 }
 
 public interface IVisitor<R> {
+    R VisitTernaryExpr(Ternary expr);
     R VisitBinaryExpr(Binary expr);
     R VisitGroupingExpr(Grouping expr);
     R VisitLiteralExpr(Literal expr);
     R VisitUnaryExpr(Unary expr);
+}
+
+public class Ternary: Expr {
+    public Token opr;
+    public Expr first;
+    public Expr second;
+    public Expr third;
+    public Ternary(Token opr, Expr first, Expr second, Expr third) {
+        this.opr = opr;
+        this.first = first;
+        this.second = second;
+        this.third = third;
+    }
+    public override R Accept<R>(IVisitor<R> visitor) {
+        return visitor.VisitTernaryExpr(this);
+    }
 }
 
 public class Binary: Expr {
