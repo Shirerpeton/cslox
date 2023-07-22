@@ -49,6 +49,9 @@ public class Interpreter: Expr.IVisitor<object?> {
                 throw new RuntimeError(expr.opr, "Operands must be two number or two string.");
             case TokenType.Slash: {
                     (double leftDouble, double rightDouble) = CheckNumberOperands(expr.opr, left, right);
+                    if(rightDouble == 0) {
+                        throw new RuntimeError(expr.opr, "Dividing by zero.");
+                    }
                     return leftDouble / rightDouble;
                 }
             case TokenType.Star: {
