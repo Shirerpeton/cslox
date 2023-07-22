@@ -15,7 +15,8 @@ public class Parser {
     public Expr.Expr? Parse() {
         try {
             return Expression();
-        } catch(ParseError) {
+        }
+        catch(ParseError) {
             return null;
         }
     }
@@ -111,7 +112,7 @@ public class Parser {
         if(Check(type)) {
             return Advance();
         }
-        throw Error(Peek, message); 
+        throw Error(Peek, message);
     }
     ParseError Error(Token token, string message) {
         errorReporter.ReportError(token, message);

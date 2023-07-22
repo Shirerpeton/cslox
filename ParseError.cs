@@ -1,3 +1,3 @@
 namespace cslox;
 
-public class ParseError: Exception {}
+public class ParseError: Exception { }
