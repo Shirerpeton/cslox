@@ -20,7 +20,16 @@ public class Parser {
         }
     }
     Expr.Expr Expression() {
-        return Equality();
+        return PartialExpr();
+    }
+    Expr.Expr PartialExpr() {
+        Expr.Expr expr = Equality();
+        while(Match(new TokenType[] { TokenType.Comma })) {
+            Token opr = Previous;
+            Expr.Expr right = Equality();
+            expr = new Expr.Binary(expr, opr, right);
+        }
+        return expr;
     }
     Expr.Expr Equality() {
         Expr.Expr expr = Comparison();

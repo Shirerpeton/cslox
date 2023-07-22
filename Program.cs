@@ -55,7 +55,7 @@ static class Program {
             errorReporter.ReportError(0, "Empty AST.");
             return;
         }
-        Console.WriteLine(new AstRPNPrinter().Print(tree));
+        Console.WriteLine(new AstPrinter().Print(tree));
     }
 
 
