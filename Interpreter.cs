@@ -75,6 +75,8 @@ public class Interpreter: Expr.IVisitor<object?> {
                 return IsEqual(left, right);
             case TokenType.BangEqual:
                 return !IsEqual(left, right);
+            case TokenType.Comma:
+                return right;
         }
         return null;
     }
