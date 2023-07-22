@@ -20,49 +20,34 @@ public class Parser {
         }
     }
     Expr.Expr Expression() {
-        return PartialExpr();
+        return CompositeExpr();
     }
-    Expr.Expr PartialExpr() {
-        Expr.Expr expr = Equality();
-        while(Match(new TokenType[] { TokenType.Comma })) {
-            Token opr = Previous;
-            Expr.Expr right = Equality();
-            expr = new Expr.Binary(expr, opr, right);
-        }
-        return expr;
+    Expr.Expr CompositeExpr() {
+        return LABinaryProduction(Equality,
+            new TokenType[] { TokenType.Comma });
     }
     Expr.Expr Equality() {
-        Expr.Expr expr = Comparison();
-        while(Match(new TokenType[] { TokenType.BangEqual, TokenType.EqualEqual })) {
-            Token opr = Previous;
-            Expr.Expr right = Comparison();
-            expr = new Expr.Binary(expr, opr, right);
-        }
-        return expr;
+        return LABinaryProduction(Comparison,
+            new TokenType[] { TokenType.BangEqual, TokenType.EqualEqual });
     }
     Expr.Expr Comparison() {
-        Expr.Expr expr = Term();
-        while(Match(new TokenType[] { TokenType.Less, TokenType.LessEqual, TokenType.Greater, TokenType.GreaterEqual })) {
-            Token opr = Previous;
-            Expr.Expr right = Term();
-            expr = new Expr.Binary(expr, opr, right);
-        }
-        return expr;
+        return LABinaryProduction(Term,
+            new TokenType[] { TokenType.Less, TokenType.LessEqual, TokenType.Greater, TokenType.GreaterEqual });
     }
     Expr.Expr Term() {
-        Expr.Expr expr = Factor();
-        while(Match(new TokenType[] { TokenType.Minus, TokenType.Plus })) {
-            Token opr = Previous;
-            Expr.Expr right = Factor();
-            expr = new Expr.Binary(expr, opr, right);
-        }
-        return expr;
+        return LABinaryProduction(Factor,
+            new TokenType[] { TokenType.Minus, TokenType.Plus });
     }
     Expr.Expr Factor() {
-        Expr.Expr expr = Unary();
-        while(Match(new TokenType[] { TokenType.Slash, TokenType.Star })) {
+        return LABinaryProduction(Unary,
+            new TokenType[] { TokenType.Slash, TokenType.Star });
+    }
+    //Helper for left-associated binary productions
+    Expr.Expr LABinaryProduction(Func<Expr.Expr> nextProduction, TokenType[] tokenTypes) {
+        Expr.Expr expr = nextProduction();
+        while(Match(tokenTypes)) {
             Token opr = Previous;
-            Expr.Expr right = Unary();
+            Expr.Expr right = nextProduction();
             expr = new Expr.Binary(expr, opr, right);
         }
         return expr;
