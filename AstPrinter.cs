@@ -19,17 +19,17 @@ public class AstPrinter: Expr.IVisitor<String> {
 
     public string VisitBinaryExpr(Expr.Binary expr) {
         return Parenthesize(expr.opr.lexeme, new Expr.Expr[] { expr.left, expr.right });
-    } 
+    }
     public string VisitGroupingExpr(Expr.Grouping expr) {
         return Parenthesize("group", new Expr.Expr[] { expr.expression });
-    } 
+    }
     public string VisitLiteralExpr(Expr.Literal expr) {
         if(expr.value == null) {
             return "nil";
         }
         return expr.value.ToString() ?? string.Empty;
-    } 
+    }
     public string VisitUnaryExpr(Expr.Unary expr) {
         return Parenthesize(expr.opr.lexeme, new Expr.Expr[] { expr.right });
-    } 
+    }
 }
