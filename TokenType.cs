@@ -2,7 +2,7 @@ namespace cslox;
 
 public enum TokenType {
     //Single character tokens
-    LeftParen, RightParen, LeftBrace, RightBrace, Comma, Dot, Minus, Plus, Semicolon, Slash, Star,
+    LeftParen, RightParen, LeftBrace, RightBrace, Comma, Dot, Minus, Plus, Semicolon, Colon, Question, Slash, Star,
     //One or two character tokens
     Bang, BangEqual, Equal, EqualEqual, Greater, GreaterEqual, Less, LessEqual,
     //Literals

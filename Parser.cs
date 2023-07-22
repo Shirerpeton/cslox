@@ -23,8 +23,21 @@ public class Parser {
         return CompositeExpr();
     }
     Expr.Expr CompositeExpr() {
-        return LABinaryProduction(Equality,
+        return LABinaryProduction(Conditional,
             new TokenType[] { TokenType.Comma });
+    }
+    Expr.Expr Conditional() {
+        Expr.Expr expr = Equality();
+        if(Match(new TokenType[] { TokenType.Question })) {
+            Token opr = Previous;
+            Expr.Expr second = Conditional();
+            if(Match(new TokenType[] { TokenType.Colon })) {
+                Expr.Expr third = Conditional();
+                return new Expr.Ternary(opr, expr, second, third);
+            }
+            throw Error(Peek, "Unclosed conditional.");
+        }
+        return expr;
     }
     Expr.Expr Equality() {
         return LABinaryProduction(Comparison,
