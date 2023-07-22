@@ -43,10 +43,19 @@ static class Program {
     static void Run(string source) {
         var scanner = new Scanner(errorReporter, source);
         List<Token> tokens = scanner.ScanTokens();
-
-        foreach(Token token in tokens) {
-            Console.WriteLine(token);
+        if(errorReporter.HadError) {
+            return;
         }
+        Parser parser = new Parser(errorReporter, tokens);
+        Expr.Expr? tree = parser.Parse();
+        if(errorReporter.HadError) {
+            return;
+        }
+        if(tree == null) {
+            errorReporter.ReportError(0, "Empty AST.");
+            return;
+        }
+        Console.WriteLine(new AstPrinter().Print(tree));
     }
 
 
