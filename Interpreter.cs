@@ -39,14 +39,19 @@ public class Interpreter: Expr.IVisitor<object?> {
                     (double leftDouble, double rightDouble) = CheckNumberOperands(expr.opr, left, right);
                     return leftDouble - rightDouble;
                 }
-            case TokenType.Plus:
-                if(left is double doubleLeft && right is double doubleRight) {
-                    return doubleLeft + doubleRight;
+            case TokenType.Plus: {
+                if(left is double leftDouble && right is double rightDouble) {
+                    return leftDouble + rightDouble;
                 }
-                if(left is string stringLeft && right is string stringRight) {
-                    return stringLeft + stringRight;
-                }
+                if(left is string leftString && right is string rightString) {
+                    return leftString + rightString;
+                } /*else if(left is string leftString1) {
+                    return leftString1 + Stringify(right);
+                } else if(right is string rigthString1) {
+                    return Stringify(left) + rigthString1;
+                }*/
                 throw new RuntimeError(expr.opr, "Operands must be two number or two string.");
+            }
             case TokenType.Slash: {
                     (double leftDouble, double rightDouble) = CheckNumberOperands(expr.opr, left, right);
                     if(rightDouble == 0) {
