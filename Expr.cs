@@ -1,4 +1,4 @@
-namespace cslox;
+namespace cslox.Expr;
 
 public abstract class Expr {
     public abstract R Accept<R>(IVisitor<R> visitor);
