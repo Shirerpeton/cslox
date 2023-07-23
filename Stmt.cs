@@ -10,6 +10,7 @@ public interface IVisitor {
     void VisitIfStmt(If stmt);
     void VisitPrintStmt(Print stmt);
     void VisitVarStmt(Var stmt);
+    void VisitWhileStmt(While stmt);
 }
 
 public class Block: Stmt {
@@ -65,6 +66,18 @@ public class Var: Stmt {
     }
     public override void Accept(IVisitor visitor) {
         visitor.VisitVarStmt(this);
+    }
+}
+
+public class While: Stmt {
+    public Expr.Expr condition;
+    public Stmt body;
+    public While(Expr.Expr condition, Stmt body) {
+        this.condition = condition;
+        this.body = body;
+    }
+    public override void Accept(IVisitor visitor) {
+        visitor.VisitWhileStmt(this);
     }
 }
 

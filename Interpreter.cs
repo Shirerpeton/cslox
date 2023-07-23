@@ -44,6 +44,11 @@ public class Interpreter: Expr.IVisitor<object?>, Stmt.IVisitor {
         }
         environment.Define(stmt.name.lexeme, value);
     }
+    public void VisitWhileStmt(Stmt.While stmt) {
+        while(IsTruthy(Evaluate(stmt.condition))) {
+            Execute(stmt.body);
+        }
+    }
     public void VisitExpressionStmt(Stmt.Expression stmt) {
         Evaluate(stmt.expression);
     }

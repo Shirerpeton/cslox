@@ -24,7 +24,7 @@ public class AstPrinter: Expr.IVisitor<String>, Stmt.IVisitor {
     }
     public void VisitVarStmt(Stmt.Var stmt) {
         if(stmt.initializer != null) {
-            Console.WriteLine($"(var {stmt.name.lexeme}{stmt.initializer.Accept(this)})");
+            Console.WriteLine($"(var {stmt.name.lexeme} {stmt.initializer.Accept(this)})");
         } else {
             Console.WriteLine($"(var {stmt.name.lexeme})");
         }
@@ -35,6 +35,11 @@ public class AstPrinter: Expr.IVisitor<String>, Stmt.IVisitor {
         if(stmt.elseBranch != null) {
             stmt.elseBranch.Accept(this);
         }
+        Console.WriteLine(")");
+    }
+    public void VisitWhileStmt(Stmt.While stmt) {
+        Console.WriteLine($"(while {stmt.condition.Accept(this)}");
+        stmt.body.Accept(this);
         Console.WriteLine(")");
     }
     public string Print(Expr.Expr expr) {

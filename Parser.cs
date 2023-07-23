@@ -50,10 +50,20 @@ public class Parser {
         if(Match(new TokenType[] { TokenType.Print })) {
             return PrintStatement();
         }
+        if(Match(new TokenType[] { TokenType.While })) {
+            return WhileStatement();
+        }
         if(Match(new TokenType[] { TokenType.LeftBrace })) {
             return new Stmt.Block(Block());
         }
         return ExpressionStatement();
+    }
+    Stmt.Stmt WhileStatement() {
+        Consume(TokenType.LeftParen, "Expect '(' after 'while'.");
+        Expr.Expr condition = Expression();
+        Consume(TokenType.RightParen, "Expect ')' after while condition.");
+        Stmt.Stmt body = Statement();
+        return new Stmt.While(condition, body);
     }
     Stmt.Stmt IfStatement() {
         Consume(TokenType.LeftParen, "Expect '(' after 'if'.");
