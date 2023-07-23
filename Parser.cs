@@ -90,8 +90,9 @@ public class Parser {
     Expr.Expr Expression() {
         return Assignment();
     }
+
     Expr.Expr Assignment() {
-        Expr.Expr expr = Equality();
+        Expr.Expr expr = Or();
         if(Match(new TokenType[] { TokenType.Equal })) {
             Token equals = Previous;
             Expr.Expr value = Assignment();
@@ -100,6 +101,24 @@ public class Parser {
                 return new Expr.Assign(name, value);
             }
             Error(equals, "Invalid assignment target.");
+        }
+        return expr;
+    }
+    Expr.Expr Or() {
+        Expr.Expr expr = And();
+        while(Match(new TokenType[] { TokenType.Or })) {
+            Token opr = Previous;
+            Expr.Expr right = And();
+            expr = new Expr.Logical(expr, opr, right);
+        }
+        return expr;
+    }
+    Expr.Expr And() {
+        Expr.Expr expr = Equality();
+        while(Match(new TokenType[] { TokenType.And })) {
+            Token opr = Previous;
+            Expr.Expr right = Equality();
+            expr = new Expr.Logical(expr, opr, right);
         }
         return expr;
     }

@@ -58,6 +58,19 @@ public class Interpreter: Expr.IVisitor<object?>, Stmt.IVisitor {
         object? value = Evaluate(stmt.expression);
         Console.WriteLine(Stringify(value));
     }
+    public object? VisitLogicalExpr(Expr.Logical expr) {
+        object? left = Evaluate(expr.left);
+        if(expr.opr.type == TokenType.Or) {
+            if(IsTruthy(left)) {
+                return left;
+            }
+        } else {
+            if(!IsTruthy(left)) {
+                return left;
+            }
+        }
+        return Evaluate(expr.right);
+    }
     public object? VisitAssignExpr(Expr.Assign expr) {
         object? value = Evaluate(expr.value);
         environment.Assign(expr.name, value);
