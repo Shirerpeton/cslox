@@ -18,7 +18,8 @@ public class Scanner {
         { "true", TokenType.True },
         { "var", TokenType.Var },
         { "while", TokenType.While },
-        { "break", TokenType.Break }
+        { "break", TokenType.Break },
+        { "continue", TokenType.Continue }
     };
     IErrorReporter errorReporter;
     readonly string source;

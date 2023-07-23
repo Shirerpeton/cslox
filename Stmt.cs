@@ -11,7 +11,9 @@ public interface IVisitor {
     void VisitPrintStmt(Print stmt);
     void VisitVarStmt(Var stmt);
     void VisitWhileStmt(While stmt);
+    void VisitForStmt(For stmt);
     void VisitBreakStmt(Break stmt);
+    void VisitContinueStmt(Continue stmt);
 }
 
 public class Block: Stmt {
@@ -82,9 +84,31 @@ public class While: Stmt {
     }
 }
 
+public class For: Stmt {
+    public Stmt? initializer;
+    public Expr.Expr? condition;
+    public Expr.Expr? increment;
+    public Stmt body;
+    public For(Stmt? initializer, Expr.Expr? condition, Expr.Expr? increment, Stmt body) {
+        this.initializer = initializer;
+        this.condition = condition;
+        this.increment = increment;
+        this.body = body;
+    }
+    public override void Accept(IVisitor visitor) {
+        visitor.VisitForStmt(this);
+    }
+}
+
 public class Break: Stmt {
     public override void Accept(IVisitor visitor) {
         visitor.VisitBreakStmt(this);
+    }
+}
+
+public class Continue: Stmt {
+    public override void Accept(IVisitor visitor) {
+        visitor.VisitContinueStmt(this);
     }
 }
 

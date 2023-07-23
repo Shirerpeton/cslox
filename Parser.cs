@@ -67,11 +67,22 @@ public class Parser {
                 throw Error(Previous, "Break statement outside of a loop.");
             }
         }
+        if(Match(new TokenType[] { TokenType.Continue })) {
+            if(inALoop) {
+                return ContinueStatement();
+            } else {
+                throw Error(Previous, "Continue statement outside of a loop.");
+            }
+        }
         return ExpressionStatement();
     }
     Stmt.Stmt BreakStatement() {
         Consume(TokenType.Semicolon, "Expect ';' after 'break'.");
         return new Stmt.Break();
+    }
+    Stmt.Stmt ContinueStatement() {
+        Consume(TokenType.Semicolon, "Expect ';' after 'continue'.");
+        return new Stmt.Continue();
     }
     Stmt.Stmt ForStatement() {
         Consume(TokenType.LeftParen, "Expect '(' after 'for'.");
@@ -95,19 +106,8 @@ public class Parser {
             increment = Expression();
         }
         Consume(TokenType.RightParen, "Expect ')' after for clauses.");
-
         Stmt.Stmt body = Statement(inALoop: true);
-        if(increment != null) {
-            body = new Stmt.Block(new List<Stmt.Stmt> { body, new Stmt.Expression(increment) });
-        }
-        if(condition == null) {
-            condition = new Expr.Literal(true);
-        }
-        body = new Stmt.While(condition, body);
-        if(initializer != null) {
-            body = new Stmt.Block(new List<Stmt.Stmt> { initializer, body });
-        }
-        return body;
+        return new Stmt.For(initializer, condition, increment, body);
     }
     Stmt.Stmt WhileStatement() {
         Consume(TokenType.LeftParen, "Expect '(' after 'while'.");

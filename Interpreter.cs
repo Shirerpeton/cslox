@@ -2,6 +2,7 @@ namespace cslox;
 
 public class Interpreter: Expr.IVisitor<object?>, Stmt.IVisitor {
     bool isBreak;
+    bool isContinue;
     readonly IErrorReporter errorReporter;
     Environment environment = new Environment();
     public Interpreter(IErrorReporter errorReporter) {
@@ -26,7 +27,7 @@ public class Interpreter: Expr.IVisitor<object?>, Stmt.IVisitor {
             this.environment = environment;
             foreach(Stmt.Stmt statement in statements) {
                 Execute(statement);
-                if(isBreak) {
+                if(isBreak || isContinue) {
                     break;
                 }
             }
@@ -51,14 +52,45 @@ public class Interpreter: Expr.IVisitor<object?>, Stmt.IVisitor {
     public void VisitWhileStmt(Stmt.While stmt) {
         while(IsTruthy(Evaluate(stmt.condition))) {
             Execute(stmt.body);
+            if(isContinue) {
+                isContinue = false;
+            }
             if(isBreak) {
                 isBreak = false;
                 break;
             }
         }
     }
+    public void VisitForStmt(Stmt.For stmt) {
+        Expr.Expr condition = stmt.condition != null ? stmt.condition : new Expr.Literal(true);
+        Environment previous = this.environment;
+        try {
+            this.environment = new Environment(previous);
+            if(stmt.initializer != null) {
+                Execute(stmt.initializer);
+            }
+            while(IsTruthy(Evaluate(condition))) {
+                Execute(stmt.body);
+                if(stmt.increment != null) {
+                    Evaluate(stmt.increment);
+                }
+                if(isContinue) {
+                    isContinue = false;
+                }
+                if(isBreak) {
+                    isBreak = false;
+                    break;
+                }
+            }
+        } finally {
+            environment = previous;
+        }
+    }
     public void VisitBreakStmt(Stmt.Break stmt) {
         isBreak = true;
+    }
+    public void VisitContinueStmt(Stmt.Continue stmt) {
+        isContinue = true;
     }
     public void VisitExpressionStmt(Stmt.Expression stmt) {
         Evaluate(stmt.expression);

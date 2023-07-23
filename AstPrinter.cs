@@ -42,8 +42,25 @@ public class AstPrinter: Expr.IVisitor<String>, Stmt.IVisitor {
         stmt.body.Accept(this);
         Console.WriteLine(")");
     }
+    public void VisitForStmt(Stmt.For stmt) {
+        Console.Write($"(for ");
+        if(stmt.initializer != null) {
+            stmt.initializer.Accept(this);
+        }
+        if(stmt.condition != null) {
+            Console.WriteLine(stmt.condition.Accept(this));
+        }
+        if(stmt.increment != null) {
+            Console.WriteLine(stmt.increment.Accept(this));
+        }
+        stmt.body.Accept(this);
+        Console.WriteLine(")");
+    }
     public void VisitBreakStmt(Stmt.Break stmt) {
         Console.WriteLine("(break)");
+    }
+    public void VisitContinueStmt(Stmt.Continue stmt) {
+        Console.WriteLine("(continue)");
     }
     public string Print(Expr.Expr expr) {
         return expr.Accept(this);
