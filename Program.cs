@@ -49,16 +49,13 @@ static class Program {
         if(errorReporter.HadError) {
             return;
         }
-        foreach(var token in tokens) {
-            Console.WriteLine(token);
-        }
         Parser parser = new Parser(errorReporter, tokens);
         List<Stmt.Stmt> statements = parser.Parse();
         if(errorReporter.HadError) {
             return;
         }
-        var printer = new AstPrinter();
-        printer.Print(statements);
+        //var printer = new AstPrinter();
+        //printer.Print(statements);
         Interpreter interpreter = new Interpreter(errorReporter);
         interpreter.Interpret(statements);
     }
