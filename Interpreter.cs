@@ -26,7 +26,8 @@ public class Interpreter: Expr.IVisitor<object?>, Stmt.IVisitor {
             foreach(Stmt.Stmt statement in statements) {
                 Execute(statement);
             }
-        } finally {
+        }
+        finally {
             this.environment = previous;
         }
     }
@@ -45,6 +46,13 @@ public class Interpreter: Expr.IVisitor<object?>, Stmt.IVisitor {
     }
     public void VisitExpressionStmt(Stmt.Expression stmt) {
         Evaluate(stmt.expression);
+    }
+    public void VisitIfStmt(Stmt.If stmt) {
+        if(IsTruthy(Evaluate(stmt.condition))) {
+            Execute(stmt.thenBranch);
+        } else if(stmt.elseBranch != null) {
+            Execute(stmt.elseBranch);
+        }
     }
     public void VisitPrintStmt(Stmt.Print stmt) {
         object? value = Evaluate(stmt.expression);

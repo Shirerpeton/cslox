@@ -44,6 +44,9 @@ public class Parser {
         return new Stmt.Var(name, initializer);
     }
     Stmt.Stmt Statement() {
+        if(Match(new TokenType[] { TokenType.If })) {
+            return IfStatement();
+        }
         if(Match(new TokenType[] { TokenType.Print })) {
             return PrintStatement();
         }
@@ -51,6 +54,17 @@ public class Parser {
             return new Stmt.Block(Block());
         }
         return ExpressionStatement();
+    }
+    Stmt.Stmt IfStatement() {
+        Consume(TokenType.LeftParen, "Expect '(' after 'if'.");
+        Expr.Expr condition = Expression();
+        Consume(TokenType.RightParen, "Expect ')' after if condition.");
+        Stmt.Stmt thenBranch = Statement();
+        Stmt.Stmt? elseBranch = null;
+        if(Match(new TokenType[] { TokenType.Else })) {
+            elseBranch = Statement();
+        }
+        return new Stmt.If(condition, thenBranch, elseBranch);
     }
     Stmt.Stmt PrintStatement() {
         Expr.Expr value = Expression();
