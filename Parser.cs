@@ -44,6 +44,9 @@ public class Parser {
         return new Stmt.Var(name, initializer);
     }
     Stmt.Stmt Statement() {
+        if(Match(new TokenType[] { TokenType.For })) {
+            return ForStatement();
+        }
         if(Match(new TokenType[] { TokenType.If })) {
             return IfStatement();
         }
@@ -57,6 +60,42 @@ public class Parser {
             return new Stmt.Block(Block());
         }
         return ExpressionStatement();
+    }
+    Stmt.Stmt ForStatement() {
+        Consume(TokenType.LeftParen, "Expect '(' after 'for'.");
+        Stmt.Stmt? initializer;
+        if(Match(new TokenType[] { TokenType.Semicolon })) {
+            initializer = null;
+        } else if(Match(new TokenType[] { TokenType.Var })) {
+            initializer = VarDeclaration();
+        } else {
+            initializer = ExpressionStatement();
+        }
+
+        Expr.Expr? condition = null;
+        if(!Check(TokenType.Semicolon)) {
+            condition = Expression();
+        }
+        Consume(TokenType.Semicolon, "Expect ';' after loop condition.");
+
+        Expr.Expr? increment = null;
+        if(!Check(TokenType.RightParen)) {
+            increment = Expression();
+        }
+        Consume(TokenType.RightParen, "Expect ')' after for clauses.");
+
+        Stmt.Stmt body = Statement();
+        if(increment != null) {
+            body = new Stmt.Block(new List<Stmt.Stmt> { body, new Stmt.Expression(increment) });
+        }
+        if(condition == null) {
+            condition = new Expr.Literal(true);
+        }
+        body = new Stmt.While(condition, body);
+        if(initializer != null) {
+            body = new Stmt.Block(new List<Stmt.Stmt> { initializer, body });
+        }
+        return body;
     }
     Stmt.Stmt WhileStatement() {
         Consume(TokenType.LeftParen, "Expect '(' after 'while'.");
