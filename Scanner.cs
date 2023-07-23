@@ -2,7 +2,7 @@ namespace cslox;
 
 public class Scanner {
     static Dictionary<string, TokenType> keywords = new Dictionary<string, TokenType> {
-        { "add", TokenType.And },
+        { "and", TokenType.And },
         { "class", TokenType.Class },
         { "else", TokenType.Else },
         { "false", TokenType.False },
@@ -17,7 +17,8 @@ public class Scanner {
         { "this", TokenType.This },
         { "true", TokenType.True },
         { "var", TokenType.Var },
-        { "while", TokenType.While }
+        { "while", TokenType.While },
+        { "break", TokenType.Break }
     };
     IErrorReporter errorReporter;
     readonly string source;

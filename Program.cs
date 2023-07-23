@@ -54,8 +54,8 @@ static class Program {
         if(errorReporter.HadError) {
             return;
         }
-        //var printer = new AstRPNPrinter();
-        //Console.WriteLine(printer.Print((statements[0] as Stmt.Expression).expression));
+        //var printer = new AstPrinter();
+        //printer.Print(statements);
         Interpreter interpreter = new Interpreter(errorReporter);
         interpreter.Interpret(statements);
     }

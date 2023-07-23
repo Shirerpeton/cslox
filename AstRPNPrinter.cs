@@ -15,7 +15,6 @@ public class AstRPNPrinter: Expr.IVisitor<String> {
         builder.Append(name);
         return builder.ToString();
     }
-
     public string VisitTernaryExpr(Expr.Ternary expr) {
         return RPNPrint(expr.opr.lexeme, new Expr.Expr[] { expr.first, expr.second, expr.third });
     }
@@ -39,5 +38,8 @@ public class AstRPNPrinter: Expr.IVisitor<String> {
     }
     public string VisitAssignExpr(Expr.Assign expr) {
         return RPNPrint($"={expr.name.lexeme}", new Expr.Expr[] { expr.value });
+    }
+    public string VisitLogicalExpr(Expr.Logical expr) {
+        return RPNPrint(expr.opr.lexeme, new Expr.Expr[] { expr.left, expr.right });
     }
 }

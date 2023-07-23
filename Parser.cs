@@ -24,14 +24,13 @@ public class Parser {
         }
         return statements;
     }
-    Stmt.Stmt? Declaration() {
+    Stmt.Stmt? Declaration(bool inALoop = false) {
         try {
             if(Match(new TokenType[] { TokenType.Var })) {
                 return VarDeclaration();
             }
-            return Statement();
-        }
-        catch(ParseError) {
+            return Statement(inALoop);
+        } catch(ParseError) {
             Syncronize();
             return null;
         }
@@ -45,24 +44,98 @@ public class Parser {
         Consume(TokenType.Semicolon, "Expect ';' after variable declaration.");
         return new Stmt.Var(name, initializer);
     }
-    Stmt.Stmt Statement() {
+    Stmt.Stmt Statement(bool inALoop = false) {
+        if(Match(new TokenType[] { TokenType.For })) {
+            return ForStatement();
+        }
+        if(Match(new TokenType[] { TokenType.If })) {
+            return IfStatement(inALoop);
+        }
         if(Match(new TokenType[] { TokenType.Print })) {
             return PrintStatement();
         }
+        if(Match(new TokenType[] { TokenType.While })) {
+            return WhileStatement();
+        }
         if(Match(new TokenType[] { TokenType.LeftBrace })) {
-            return new Stmt.Block(Block());
+            return new Stmt.Block(Block(inALoop));
+        }
+        if(Match(new TokenType[] { TokenType.Break })) {
+            if(inALoop) {
+                return BreakStatement();
+            } else {
+                throw Error(Previous, "Break statement outside of a loop.");
+            }
         }
         return ExpressionStatement();
+    }
+    Stmt.Stmt BreakStatement() {
+        Consume(TokenType.Semicolon, "Expect ';' after 'break'.");
+        return new Stmt.Break();
+    }
+    Stmt.Stmt ForStatement() {
+        Consume(TokenType.LeftParen, "Expect '(' after 'for'.");
+        Stmt.Stmt? initializer;
+        if(Match(new TokenType[] { TokenType.Semicolon })) {
+            initializer = null;
+        } else if(Match(new TokenType[] { TokenType.Var })) {
+            initializer = VarDeclaration();
+        } else {
+            initializer = ExpressionStatement();
+        }
+
+        Expr.Expr? condition = null;
+        if(!Check(TokenType.Semicolon)) {
+            condition = Expression();
+        }
+        Consume(TokenType.Semicolon, "Expect ';' after loop condition.");
+
+        Expr.Expr? increment = null;
+        if(!Check(TokenType.RightParen)) {
+            increment = Expression();
+        }
+        Consume(TokenType.RightParen, "Expect ')' after for clauses.");
+
+        Stmt.Stmt body = Statement(inALoop: true);
+        if(increment != null) {
+            body = new Stmt.Block(new List<Stmt.Stmt> { body, new Stmt.Expression(increment) });
+        }
+        if(condition == null) {
+            condition = new Expr.Literal(true);
+        }
+        body = new Stmt.While(condition, body);
+        if(initializer != null) {
+            body = new Stmt.Block(new List<Stmt.Stmt> { initializer, body });
+        }
+        return body;
+    }
+    Stmt.Stmt WhileStatement() {
+        Consume(TokenType.LeftParen, "Expect '(' after 'while'.");
+        Expr.Expr condition = Expression();
+        Consume(TokenType.RightParen, "Expect ')' after while condition.");
+        Stmt.Stmt body = Statement(inALoop: true);
+        return new Stmt.While(condition, body);
+    }
+    Stmt.Stmt IfStatement(bool inALoop = false) {
+        Consume(TokenType.LeftParen, "Expect '(' after 'if'.");
+        Expr.Expr condition = Expression();
+        Consume(TokenType.RightParen, "Expect ')' after if condition.");
+        Stmt.Stmt thenBranch = Statement(inALoop);
+        Stmt.Stmt? elseBranch = null;
+        if(Match(new TokenType[] { TokenType.Else })) {
+            elseBranch = Statement(inALoop);
+        }
+        return new Stmt.If(condition, thenBranch, elseBranch);
     }
     Stmt.Stmt PrintStatement() {
         Expr.Expr value = Expression();
         Consume(TokenType.Semicolon, "Expect ';' after value.");
         return new Stmt.Print(value);
     }
-    List<Stmt.Stmt> Block() {
+    List<Stmt.Stmt> Block(bool inALoop = false) {
         var statements = new List<Stmt.Stmt>();
         while(!Check(TokenType.RightBrace) && !IsAtEnd) {
-            Stmt.Stmt? declaration = Declaration();
+            Stmt.Stmt? declaration = Declaration(inALoop);
             if(declaration != null) {
                 statements.Add(declaration);
             }
@@ -72,11 +145,11 @@ public class Parser {
     }
     Stmt.Stmt ExpressionStatement() {
         Expr.Expr expr = Expression();
-        if(!isRepl) {
+        if(isRepl && !Check(TokenType.Semicolon)) {
+            return new Stmt.Print(expr);
+        } else {
             Consume(TokenType.Semicolon, "Expect ';' after expression.");
             return new Stmt.Expression(expr);
-        } else {
-            return new Stmt.Print(expr);
         }
     }
     Expr.Expr Expression() {
@@ -100,7 +173,7 @@ public class Parser {
             new TokenType[] { TokenType.Comma });
     }
     Expr.Expr Conditional() {
-        Expr.Expr expr = Equality();
+        Expr.Expr expr = Or();
         if(Match(new TokenType[] { TokenType.Question })) {
             Token opr = Previous;
             Expr.Expr second = Conditional();
@@ -109,6 +182,24 @@ public class Parser {
                 return new Expr.Ternary(opr, expr, second, third);
             }
             throw Error(Peek, "Unclosed conditional.");
+        }
+        return expr;
+    }
+    Expr.Expr Or() {
+        Expr.Expr expr = And();
+        while(Match(new TokenType[] { TokenType.Or })) {
+            Token opr = Previous;
+            Expr.Expr right = And();
+            expr = new Expr.Logical(expr, opr, right);
+        }
+        return expr;
+    }
+    Expr.Expr And() {
+        Expr.Expr expr = Equality();
+        while(Match(new TokenType[] { TokenType.And })) {
+            Token opr = Previous;
+            Expr.Expr right = Equality();
+            expr = new Expr.Logical(expr, opr, right);
         }
         return expr;
     }

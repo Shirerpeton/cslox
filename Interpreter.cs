@@ -1,6 +1,7 @@
 namespace cslox;
 
 public class Interpreter: Expr.IVisitor<object?>, Stmt.IVisitor {
+    bool isBreak;
     readonly IErrorReporter errorReporter;
     Environment environment = new Environment();
     public Interpreter(IErrorReporter errorReporter) {
@@ -25,6 +26,9 @@ public class Interpreter: Expr.IVisitor<object?>, Stmt.IVisitor {
             this.environment = environment;
             foreach(Stmt.Stmt statement in statements) {
                 Execute(statement);
+                if(isBreak) {
+                    break;
+                }
             }
         }
         finally {
@@ -44,12 +48,44 @@ public class Interpreter: Expr.IVisitor<object?>, Stmt.IVisitor {
         }
         environment.Define(stmt.name.lexeme, stmt.initializer != null, value);
     }
+    public void VisitWhileStmt(Stmt.While stmt) {
+        while(IsTruthy(Evaluate(stmt.condition))) {
+            Execute(stmt.body);
+            if(isBreak) {
+                isBreak = false;
+                break;
+            }
+        }
+    }
+    public void VisitBreakStmt(Stmt.Break stmt) {
+        isBreak = true;
+    }
     public void VisitExpressionStmt(Stmt.Expression stmt) {
         Evaluate(stmt.expression);
+    }
+    public void VisitIfStmt(Stmt.If stmt) {
+        if(IsTruthy(Evaluate(stmt.condition))) {
+            Execute(stmt.thenBranch);
+        } else if(stmt.elseBranch != null) {
+            Execute(stmt.elseBranch);
+        }
     }
     public void VisitPrintStmt(Stmt.Print stmt) {
         object? value = Evaluate(stmt.expression);
         Console.WriteLine(Stringify(value));
+    }
+    public object? VisitLogicalExpr(Expr.Logical expr) {
+        object? left = Evaluate(expr.left);
+        if(expr.opr.type == TokenType.Or) {
+            if(IsTruthy(left)) {
+                return left;
+            }
+        } else {
+            if(!IsTruthy(left)) {
+                return left;
+            }
+        }
+        return Evaluate(expr.right);
     }
     public object? VisitAssignExpr(Expr.Assign expr) {
         object? value = Evaluate(expr.value);

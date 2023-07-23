@@ -7,8 +7,11 @@ public abstract class Stmt {
 public interface IVisitor {
     void VisitBlockStmt(Block stmt);
     void VisitExpressionStmt(Expression stmt);
+    void VisitIfStmt(If stmt);
     void VisitPrintStmt(Print stmt);
     void VisitVarStmt(Var stmt);
+    void VisitWhileStmt(While stmt);
+    void VisitBreakStmt(Break stmt);
 }
 
 public class Block: Stmt {
@@ -31,6 +34,20 @@ public class Expression: Stmt {
     }
 }
 
+public class If: Stmt {
+    public Expr.Expr condition;
+    public Stmt thenBranch;
+    public Stmt? elseBranch;
+    public If(Expr.Expr condition, Stmt thenBranch, Stmt? elseBranch) {
+        this.condition = condition;
+        this.thenBranch = thenBranch;
+        this.elseBranch = elseBranch;
+    }
+    public override void Accept(IVisitor visitor) {
+        visitor.VisitIfStmt(this);
+    }
+}
+
 public class Print: Stmt {
     public Expr.Expr expression;
     public Print(Expr.Expr expression) {
@@ -50,6 +67,24 @@ public class Var: Stmt {
     }
     public override void Accept(IVisitor visitor) {
         visitor.VisitVarStmt(this);
+    }
+}
+
+public class While: Stmt {
+    public Expr.Expr condition;
+    public Stmt body;
+    public While(Expr.Expr condition, Stmt body) {
+        this.condition = condition;
+        this.body = body;
+    }
+    public override void Accept(IVisitor visitor) {
+        visitor.VisitWhileStmt(this);
+    }
+}
+
+public class Break: Stmt {
+    public override void Accept(IVisitor visitor) {
+        visitor.VisitBreakStmt(this);
     }
 }
 

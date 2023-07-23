@@ -10,6 +10,7 @@ public interface IVisitor<R> {
     R VisitBinaryExpr(Binary expr);
     R VisitGroupingExpr(Grouping expr);
     R VisitLiteralExpr(Literal expr);
+    R VisitLogicalExpr(Logical expr);
     R VisitUnaryExpr(Unary expr);
     R VisitVariableExpr(Variable expr);
 }
@@ -73,6 +74,20 @@ public class Literal: Expr {
     }
     public override R Accept<R>(IVisitor<R> visitor) {
         return visitor.VisitLiteralExpr(this);
+    }
+}
+
+public class Logical: Expr {
+    public Expr left;
+    public Token opr;
+    public Expr right;
+    public Logical(Expr left, Token opr, Expr right) {
+        this.left = left;
+        this.opr = opr;
+        this.right = right;
+    }
+    public override R Accept<R>(IVisitor<R> visitor) {
+        return visitor.VisitLogicalExpr(this);
     }
 }
 
