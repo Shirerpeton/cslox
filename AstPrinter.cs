@@ -70,6 +70,9 @@ public class AstPrinter: Expr.IVisitor<String>, Stmt.IVisitor {
     public string VisitUnaryExpr(Expr.Unary expr) {
         return Parenthesize(expr.opr.lexeme, new Expr.Expr[] { expr.right });
     }
+    public string VisitCallExpr(Expr.Call expr) {
+        return Parenthesize(expr.callee.Accept(this), expr.arguments.ToArray());
+    }
     public string VisitVariableExpr(Expr.Variable expr) {
         return expr.name.lexeme;
     }

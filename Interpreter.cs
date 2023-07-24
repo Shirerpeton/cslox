@@ -2,9 +2,16 @@ namespace cslox;
 
 public class Interpreter: Expr.IVisitor<object?>, Stmt.IVisitor {
     readonly IErrorReporter errorReporter;
-    Environment environment = new Environment();
+    Environment globals = new Environment();
+    Environment environment;
     public Interpreter(IErrorReporter errorReporter) {
         this.errorReporter = errorReporter;
+        this.globals.Define("clock", new Function(arity: 0,
+            (Interpreter interpreter, List<object?> arguments) => {
+                return (double)(DateTimeOffset.Now.ToUnixTimeMilliseconds());
+            }
+        ));
+        this.environment = globals;
     }
     public void Interpret(List<Stmt.Stmt> statements) {
         try {
@@ -89,6 +96,20 @@ public class Interpreter: Expr.IVisitor<object?>, Stmt.IVisitor {
     }
     public object? VisitGroupingExpr(Expr.Grouping expr) {
         return Evaluate(expr.expression);
+    }
+    public object? VisitCallExpr(Expr.Call expr) {
+        object? callee = Evaluate(expr.callee);
+        var arguments = new List<object?>();
+        foreach(Expr.Expr argument in expr.arguments) {
+            arguments.Add(Evaluate(argument));
+        }
+        if(callee is ICallable callable) {
+            if(arguments.Count != callable.Arity) {
+                throw new RuntimeError(expr.paren, $"Expected {callable.Arity} arguments but got {arguments.Count}.");
+            }
+            return callable.Call(this, arguments);
+        }
+        throw new RuntimeError(expr.paren, "Can only call functions and classes.");
     }
     public object? VisitUnaryExpr(Expr.Unary expr) {
         object? right = Evaluate(expr.right);
