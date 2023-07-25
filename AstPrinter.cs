@@ -42,6 +42,17 @@ public class AstPrinter: Expr.IVisitor<String>, Stmt.IVisitor {
         stmt.body.Accept(this);
         Console.WriteLine(")");
     }
+    public void VisitFunctionStmt(Stmt.Function stmt) {
+        string parameters = string.Join(' ', stmt.parameters.Select(p => p.lexeme));
+        Console.WriteLine($"(define {stmt.name.lexeme} ({parameters})");
+        foreach(Stmt.Stmt statement in stmt.body) {
+            statement.Accept(this);
+        }
+        Console.WriteLine(")");
+    }
+    public void VisitReturnStmt(Stmt.Return stmt) {
+        Console.WriteLine("(return)");
+    }
     public string Print(Expr.Expr expr) {
         return expr.Accept(this);
     }

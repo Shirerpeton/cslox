@@ -24,6 +24,9 @@ public class Parser {
     }
     Stmt.Stmt? Declaration() {
         try {
+            if(Match(new TokenType[] { TokenType.Fun })) {
+                return Function("function");
+            }
             if(Match(new TokenType[] { TokenType.Var })) {
                 return VarDeclaration();
             }
@@ -33,6 +36,24 @@ public class Parser {
             Syncronize();
             return null;
         }
+    }
+    Stmt.Stmt Function(string kind) {
+        Token name = Consume(TokenType.Identifier, $"Expect {kind} name.");
+        Consume(TokenType.LeftParen, $"Expect '(' after {kind} name.");
+        var parameters = new List<Token>();
+        if(!Check(TokenType.RightParen)) {
+            do {
+                if(parameters.Count >= 255) {
+                    Error(Peek, "Can't have more than 255 parameters.");
+                }
+                parameters.Add(Consume(TokenType.Identifier, "Expect parameter name."));
+            } while(Match(new TokenType[] { TokenType.Comma }));
+        }
+        Consume(TokenType.RightParen, "Expect ')' after parameters.");
+
+        Consume(TokenType.LeftBrace, $"Expect '{{' before {kind} body.");
+        List<Stmt.Stmt> body = Block();
+        return new Stmt.Function(name, parameters, body);
     }
     Stmt.Stmt VarDeclaration() {
         Token name = Consume(TokenType.Identifier, "Expect variable name.");
@@ -53,6 +74,9 @@ public class Parser {
         if(Match(new TokenType[] { TokenType.Print })) {
             return PrintStatement();
         }
+        if(Match(new TokenType[] { TokenType.Return })) {
+            return ReturnStatement();
+        }
         if(Match(new TokenType[] { TokenType.While })) {
             return WhileStatement();
         }
@@ -60,6 +84,15 @@ public class Parser {
             return new Stmt.Block(Block());
         }
         return ExpressionStatement();
+    }
+    Stmt.Stmt ReturnStatement() {
+      Token keyword = Previous;
+      Expr.Expr? value = null;
+      if(!Check(TokenType.Semicolon)) {
+        value = Expression();
+      }
+      Consume(TokenType.Semicolon, "Expect ';' after return value.");
+      return new Stmt.Return(keyword, value);
     }
     Stmt.Stmt ForStatement() {
         Consume(TokenType.LeftParen, "Expect '(' after 'for'.");

@@ -1,14 +1,16 @@
 namespace cslox.Stmt;
 
-public abstract class Stmt {
+    public abstract class Stmt {
     public abstract void Accept(IVisitor visitor);
 }
 
 public interface IVisitor {
     void VisitBlockStmt(Block stmt);
     void VisitExpressionStmt(Expression stmt);
+    void VisitFunctionStmt(Function stmt);
     void VisitIfStmt(If stmt);
     void VisitPrintStmt(Print stmt);
+    void VisitReturnStmt(Return stmt);
     void VisitVarStmt(Var stmt);
     void VisitWhileStmt(While stmt);
 }
@@ -30,6 +32,20 @@ public class Expression: Stmt {
     }
     public override void Accept(IVisitor visitor) {
         visitor.VisitExpressionStmt(this);
+    }
+}
+
+public class Function: Stmt {
+    public Token name;
+    public List<Token> parameters;
+    public List<Stmt> body;
+    public Function(Token name, List<Token> parameters, List<Stmt> body) {
+        this.name = name;
+        this.parameters = parameters;
+        this.body = body;
+    }
+    public override void Accept(IVisitor visitor) {
+        visitor.VisitFunctionStmt(this);
     }
 }
 
@@ -57,6 +73,18 @@ public class Print: Stmt {
     }
 }
 
+public class Return: Stmt {
+    public Token keyword;
+    public Expr.Expr? value;
+    public Return(Token keyword, Expr.Expr? value) {
+        this.keyword = keyword;
+        this.value = value;
+    }
+    public override void Accept(IVisitor visitor) {
+        visitor.VisitReturnStmt(this);
+    }
+}
+
 public class Var: Stmt {
     public Token name;
     public Expr.Expr? initializer;
@@ -80,4 +108,6 @@ public class While: Stmt {
         visitor.VisitWhileStmt(this);
     }
 }
+
+
 

@@ -2,11 +2,11 @@ namespace cslox;
 
 public class Interpreter: Expr.IVisitor<object?>, Stmt.IVisitor {
     readonly IErrorReporter errorReporter;
-    Environment globals = new Environment();
+    public Environment globals = new Environment();
     Environment environment;
     public Interpreter(IErrorReporter errorReporter) {
         this.errorReporter = errorReporter;
-        this.globals.Define("clock", new Function(arity: 0,
+        this.globals.Define("clock", new GlobalFunction(arity: 0,
             (Interpreter interpreter, List<object?> arguments) => {
                 return (double)(DateTimeOffset.Now.ToUnixTimeMilliseconds());
             }
@@ -26,7 +26,7 @@ public class Interpreter: Expr.IVisitor<object?>, Stmt.IVisitor {
     void Execute(Stmt.Stmt stmt) {
         stmt.Accept(this);
     }
-    void ExecuteBlock(List<Stmt.Stmt> statements, Environment environment) {
+    public void ExecuteBlock(List<Stmt.Stmt> statements, Environment environment) {
         Environment previous = this.environment;
         try {
             this.environment = environment;
@@ -69,6 +69,17 @@ public class Interpreter: Expr.IVisitor<object?>, Stmt.IVisitor {
     public void VisitPrintStmt(Stmt.Print stmt) {
         object? value = Evaluate(stmt.expression);
         Console.WriteLine(Stringify(value));
+    }
+    public void VisitFunctionStmt(Stmt.Function stmt) {
+        var function = new Function(stmt, environment);
+        environment.Define(stmt.name.lexeme, function);
+    }
+    public void VisitReturnStmt(Stmt.Return stmt) {
+      object? value = null;
+      if(stmt.value != null) {
+        value = Evaluate(stmt.value);
+      }
+      throw new Return(value);
     }
     public object? VisitLogicalExpr(Expr.Logical expr) {
         object? left = Evaluate(expr.left);
