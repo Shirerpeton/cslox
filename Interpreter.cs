@@ -4,9 +4,16 @@ public class Interpreter: Expr.IVisitor<object?>, Stmt.IVisitor {
     bool isBreak;
     bool isContinue;
     readonly IErrorReporter errorReporter;
-    Environment environment = new Environment();
+    public Environment globals = new Environment();
+    Environment environment;
     public Interpreter(IErrorReporter errorReporter) {
         this.errorReporter = errorReporter;
+        this.globals.Define("clock", new GlobalFunction(arity: 0,
+            (Interpreter interpreter, List<object?> arguments) => {
+                return (double)(DateTimeOffset.Now.ToUnixTimeMilliseconds());
+            }
+        ));
+        this.environment = globals;
     }
     public void Interpret(List<Stmt.Stmt> statements) {
         try {
@@ -21,7 +28,7 @@ public class Interpreter: Expr.IVisitor<object?>, Stmt.IVisitor {
     void Execute(Stmt.Stmt stmt) {
         stmt.Accept(this);
     }
-    void ExecuteBlock(List<Stmt.Stmt> statements, Environment environment) {
+    public void ExecuteBlock(List<Stmt.Stmt> statements, Environment environment) {
         Environment previous = this.environment;
         try {
             this.environment = environment;
@@ -47,7 +54,7 @@ public class Interpreter: Expr.IVisitor<object?>, Stmt.IVisitor {
         if(stmt.initializer != null) {
             value = Evaluate(stmt.initializer);
         }
-        environment.Define(stmt.name.lexeme, stmt.initializer != null, value);
+        environment.Define(stmt.name.lexeme, value, initialize: stmt.initializer != null);
     }
     public void VisitWhileStmt(Stmt.While stmt) {
         while(IsTruthy(Evaluate(stmt.condition))) {
@@ -82,7 +89,8 @@ public class Interpreter: Expr.IVisitor<object?>, Stmt.IVisitor {
                     break;
                 }
             }
-        } finally {
+        }
+        finally {
             environment = previous;
         }
     }
@@ -105,6 +113,17 @@ public class Interpreter: Expr.IVisitor<object?>, Stmt.IVisitor {
     public void VisitPrintStmt(Stmt.Print stmt) {
         object? value = Evaluate(stmt.expression);
         Console.WriteLine(Stringify(value));
+    }
+    public void VisitFunctionStmt(Stmt.Function stmt) {
+        var function = new Function(stmt, environment);
+        environment.Define(stmt.name.lexeme, function);
+    }
+    public void VisitReturnStmt(Stmt.Return stmt) {
+        object? value = null;
+        if(stmt.value != null) {
+            value = Evaluate(stmt.value);
+        }
+        throw new Return(value);
     }
     public object? VisitLogicalExpr(Expr.Logical expr) {
         object? left = Evaluate(expr.left);
@@ -132,6 +151,20 @@ public class Interpreter: Expr.IVisitor<object?>, Stmt.IVisitor {
     }
     public object? VisitGroupingExpr(Expr.Grouping expr) {
         return Evaluate(expr.expression);
+    }
+    public object? VisitCallExpr(Expr.Call expr) {
+        object? callee = Evaluate(expr.callee);
+        var arguments = new List<object?>();
+        foreach(Expr.Expr argument in expr.arguments) {
+            arguments.Add(Evaluate(argument));
+        }
+        if(callee is ICallable callable) {
+            if(arguments.Count != callable.Arity) {
+                throw new RuntimeError(expr.paren, $"Expected {callable.Arity} arguments but got {arguments.Count}.");
+            }
+            return callable.Call(this, arguments);
+        }
+        throw new RuntimeError(expr.paren, "Can only call functions and classes.");
     }
     public object? VisitUnaryExpr(Expr.Unary expr) {
         object? right = Evaluate(expr.right);

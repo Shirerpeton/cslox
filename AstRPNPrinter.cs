@@ -15,6 +15,9 @@ public class AstRPNPrinter: Expr.IVisitor<String> {
         builder.Append(name);
         return builder.ToString();
     }
+    public string VisitCallExpr(Expr.Call expr) {
+        return RPNPrint(expr.callee.Accept(this), expr.arguments.ToArray());
+    }
     public string VisitTernaryExpr(Expr.Ternary expr) {
         return RPNPrint(expr.opr.lexeme, new Expr.Expr[] { expr.first, expr.second, expr.third });
     }

@@ -26,14 +26,36 @@ public class Parser {
     }
     Stmt.Stmt? Declaration(bool inALoop = false) {
         try {
+            if(Match(new TokenType[] { TokenType.Fun })) {
+                return Function("function");
+            }
             if(Match(new TokenType[] { TokenType.Var })) {
                 return VarDeclaration();
             }
             return Statement(inALoop);
-        } catch(ParseError) {
+        }
+        catch(ParseError) {
             Syncronize();
             return null;
         }
+    }
+    Stmt.Stmt Function(string kind) {
+        Token name = Consume(TokenType.Identifier, $"Expect {kind} name.");
+        Consume(TokenType.LeftParen, $"Expect '(' after {kind} name.");
+        var parameters = new List<Token>();
+        if(!Check(TokenType.RightParen)) {
+            do {
+                if(parameters.Count >= 255) {
+                    Error(Peek, "Can't have more than 255 parameters.");
+                }
+                parameters.Add(Consume(TokenType.Identifier, "Expect parameter name."));
+            } while(Match(new TokenType[] { TokenType.Comma }));
+        }
+        Consume(TokenType.RightParen, "Expect ')' after parameters.");
+
+        Consume(TokenType.LeftBrace, $"Expect '{{' before {kind} body.");
+        List<Stmt.Stmt> body = Block();
+        return new Stmt.Function(name, parameters, body);
     }
     Stmt.Stmt VarDeclaration() {
         Token name = Consume(TokenType.Identifier, "Expect variable name.");
@@ -53,6 +75,9 @@ public class Parser {
         }
         if(Match(new TokenType[] { TokenType.Print })) {
             return PrintStatement();
+        }
+        if(Match(new TokenType[] { TokenType.Return })) {
+            return ReturnStatement();
         }
         if(Match(new TokenType[] { TokenType.While })) {
             return WhileStatement();
@@ -83,6 +108,15 @@ public class Parser {
     Stmt.Stmt ContinueStatement() {
         Consume(TokenType.Semicolon, "Expect ';' after 'continue'.");
         return new Stmt.Continue();
+    }
+    Stmt.Stmt ReturnStatement() {
+        Token keyword = Previous;
+        Expr.Expr? value = null;
+        if(!Check(TokenType.Semicolon)) {
+            value = Expression();
+        }
+        Consume(TokenType.Semicolon, "Expect ';' after return value.");
+        return new Stmt.Return(keyword, value);
     }
     Stmt.Stmt ForStatement() {
         Consume(TokenType.LeftParen, "Expect '(' after 'for'.");
@@ -248,7 +282,31 @@ public class Parser {
             Expr.Expr right = Unary();
             return new Expr.Unary(opr, right);
         }
-        return Primary();
+        return Call();
+    }
+    Expr.Expr Call() {
+        Expr.Expr expr = Primary();
+        while(true) {
+            if(Match(new TokenType[] { TokenType.LeftParen })) {
+                expr = FinishCall(expr);
+            } else {
+                break;
+            }
+        }
+        return expr;
+    }
+    Expr.Expr FinishCall(Expr.Expr callee) {
+        var arguments = new List<Expr.Expr>();
+        if(!Check(TokenType.RightParen)) {
+            do {
+                if(arguments.Count >= 255) {
+                    Error(Peek, "Can't have more than 255 arguments.");
+                }
+                arguments.Add(Expression());
+            } while(Match(new TokenType[] { TokenType.Comma }));
+        }
+        Token paren = Consume(TokenType.RightParen, "Expect ')' after arguments.");
+        return new Expr.Call(callee, paren, arguments);
     }
     Expr.Expr Primary() {
         if(Match(new TokenType[] { TokenType.False })) {

@@ -11,7 +11,7 @@ public class Environment {
     public Environment(Environment? enclosing = null) {
         this.enclosing = enclosing;
     }
-    public void Define(string name, bool initialize, object? value) {
+    public void Define(string name, object? value, bool initialize = true) {
         var variableValue = new VariableValue { initialized = initialize, value = value };
         values.Add(name, variableValue);
     }

@@ -8,6 +8,7 @@ public interface IVisitor<R> {
     R VisitAssignExpr(Assign expr);
     R VisitTernaryExpr(Ternary expr);
     R VisitBinaryExpr(Binary expr);
+    R VisitCallExpr(Call expr);
     R VisitGroupingExpr(Grouping expr);
     R VisitLiteralExpr(Literal expr);
     R VisitLogicalExpr(Logical expr);
@@ -54,6 +55,20 @@ public class Binary: Expr {
     }
     public override R Accept<R>(IVisitor<R> visitor) {
         return visitor.VisitBinaryExpr(this);
+    }
+}
+
+public class Call: Expr {
+    public Expr callee;
+    public Token paren;
+    public List<Expr> arguments;
+    public Call(Expr callee, Token paren, List<Expr> arguments) {
+        this.callee = callee;
+        this.paren = paren;
+        this.arguments = arguments;
+    }
+    public override R Accept<R>(IVisitor<R> visitor) {
+        return visitor.VisitCallExpr(this);
     }
 }
 
@@ -112,4 +127,3 @@ public class Variable: Expr {
         return visitor.VisitVariableExpr(this);
     }
 }
-
