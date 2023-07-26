@@ -73,9 +73,6 @@ public class Parser {
         if(Match(new TokenType[] { TokenType.If })) {
             return IfStatement(inALoop);
         }
-        if(Match(new TokenType[] { TokenType.Print })) {
-            return PrintStatement();
-        }
         if(Match(new TokenType[] { TokenType.Return })) {
             return ReturnStatement();
         }
@@ -161,11 +158,6 @@ public class Parser {
         }
         return new Stmt.If(condition, thenBranch, elseBranch);
     }
-    Stmt.Stmt PrintStatement() {
-        Expr.Expr value = Expression();
-        Consume(TokenType.Semicolon, "Expect ';' after value.");
-        return new Stmt.Print(value);
-    }
     List<Stmt.Stmt> Block(bool inALoop = false) {
         var statements = new List<Stmt.Stmt>();
         while(!Check(TokenType.RightBrace) && !IsAtEnd) {
@@ -180,7 +172,8 @@ public class Parser {
     Stmt.Stmt ExpressionStatement() {
         Expr.Expr expr = Expression();
         if(isRepl && !Check(TokenType.Semicolon)) {
-            return new Stmt.Print(expr);
+            expr = new Expr.Call(new Expr.Literal("print"), new Token(type: TokenType.RightParen, lexeme: ")", literal: null, line:1), new List<Expr.Expr> { expr });
+            return new Stmt.Expression(expr);
         } else {
             Consume(TokenType.Semicolon, "Expect ';' after expression.");
             return new Stmt.Expression(expr);
@@ -375,7 +368,6 @@ public class Parser {
                 case TokenType.For:
                 case TokenType.If:
                 case TokenType.While:
-                case TokenType.Print:
                 case TokenType.Return:
                     return;
             }

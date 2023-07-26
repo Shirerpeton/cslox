@@ -9,7 +9,6 @@ public interface IVisitor {
     void VisitExpressionStmt(Expression stmt);
     void VisitFunctionStmt(Function stmt);
     void VisitIfStmt(If stmt);
-    void VisitPrintStmt(Print stmt);
     void VisitReturnStmt(Return stmt);
     void VisitVarStmt(Var stmt);
     void VisitWhileStmt(While stmt);
@@ -63,16 +62,6 @@ public class If: Stmt {
     }
     public override void Accept(IVisitor visitor) {
         visitor.VisitIfStmt(this);
-    }
-}
-
-public class Print: Stmt {
-    public Expr.Expr expression;
-    public Print(Expr.Expr expression) {
-        this.expression = expression;
-    }
-    public override void Accept(IVisitor visitor) {
-        visitor.VisitPrintStmt(this);
     }
 }
 

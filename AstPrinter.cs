@@ -16,9 +16,6 @@ public class AstPrinter: Expr.IVisitor<String>, Stmt.IVisitor {
         }
         Console.WriteLine(")");
     }
-    public void VisitPrintStmt(Stmt.Print stmt) {
-        Console.WriteLine($"(print {stmt.expression.Accept(this)})");
-    }
     public void VisitExpressionStmt(Stmt.Expression stmt) {
         Console.WriteLine($"{stmt.expression.Accept(this)}");
     }

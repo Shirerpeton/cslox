@@ -13,6 +13,12 @@ public class Interpreter: Expr.IVisitor<object?>, Stmt.IVisitor {
                 return (double)(DateTimeOffset.Now.ToUnixTimeMilliseconds());
             }
         ));
+        this.globals.Define("print", new GlobalFunction(arity: 1,
+            (Interpreter interpreter, List<object?> arguments) => {
+                string arg = Stringify(arguments[0]);
+                Console.WriteLine(arg);
+                return arg;
+        }));
         this.environment = globals;
     }
     public void Interpret(List<Stmt.Stmt> statements) {
@@ -109,10 +115,6 @@ public class Interpreter: Expr.IVisitor<object?>, Stmt.IVisitor {
         } else if(stmt.elseBranch != null) {
             Execute(stmt.elseBranch);
         }
-    }
-    public void VisitPrintStmt(Stmt.Print stmt) {
-        object? value = Evaluate(stmt.expression);
-        Console.WriteLine(Stringify(value));
     }
     public void VisitFunctionStmt(Stmt.Function stmt) {
         var function = new Function(stmt, environment);
