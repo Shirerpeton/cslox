@@ -27,7 +27,12 @@ public class Parser {
     Stmt.Stmt? Declaration(bool inALoop = false) {
         try {
             if(Match(new TokenType[] { TokenType.Fun })) {
+              if(Check(TokenType.Identifier)) {
                 return Function("function");
+              } else {
+                Back();
+                return ExpressionStatement();
+              }
             }
             if(Match(new TokenType[] { TokenType.Var })) {
                 return VarDeclaration();
@@ -172,7 +177,7 @@ public class Parser {
     Stmt.Stmt ExpressionStatement() {
         Expr.Expr expr = Expression();
         if(isRepl && !Check(TokenType.Semicolon)) {
-            expr = new Expr.Call(new Expr.Literal("print"), new Token(type: TokenType.RightParen, lexeme: ")", literal: null, line:1), new List<Expr.Expr> { expr });
+            expr = new Expr.Call(new Expr.Literal("print"), new Token(type: TokenType.RightParen, lexeme: ")", literal: null, line: 1), new List<Expr.Expr> { expr });
             return new Stmt.Expression(expr);
         } else {
             Consume(TokenType.Semicolon, "Expect ';' after expression.");
@@ -278,7 +283,7 @@ public class Parser {
         return Call();
     }
     Expr.Expr Call() {
-        Expr.Expr expr = Primary();
+        Expr.Expr expr = Lambda();
         while(true) {
             if(Match(new TokenType[] { TokenType.LeftParen })) {
                 expr = FinishCall(expr);
@@ -287,6 +292,25 @@ public class Parser {
             }
         }
         return expr;
+    }
+    Expr.Expr Lambda() {
+        if(Match(new TokenType[] { TokenType.Fun })) {
+            Consume(TokenType.LeftParen, "Expect '(' after 'fun'.");
+            var parameters = new List<Token>();
+            if(!Check(TokenType.RightParen)) {
+                do {
+                    if(parameters.Count >= 255) {
+                        Error(Peek, "Can't have more than 255 parameters.");
+                    }
+                    parameters.Add(Consume(TokenType.Identifier, "Expect parameter name."));
+                } while(Match(new TokenType[] { TokenType.Comma }));
+            }
+            Consume(TokenType.RightParen, "Expect ')' after parameters.");
+            Consume(TokenType.LeftBrace, $"Expect '{{' before lambda body.");
+            List<Stmt.Stmt> body = Block();
+            return new Expr.Lambda(parameters, body);
+        }
+        return Primary();
     }
     Expr.Expr FinishCall(Expr.Expr callee) {
         var arguments = new List<Expr.Expr>();
@@ -338,6 +362,11 @@ public class Parser {
             return false;
         }
         return Peek.type == type;
+    }
+    void Back() {
+      if(current != 0) {
+        current--;
+      }
     }
     Token Advance() {
         if(!IsAtEnd) {

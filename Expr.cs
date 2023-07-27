@@ -1,31 +1,20 @@
 namespace cslox.Expr;
 
-public abstract class Expr {
+    public abstract class Expr {
     public abstract R Accept<R>(IVisitor<R> visitor);
 }
 
 public interface IVisitor<R> {
-    R VisitAssignExpr(Assign expr);
     R VisitTernaryExpr(Ternary expr);
+    R VisitAssignExpr(Assign expr);
     R VisitBinaryExpr(Binary expr);
     R VisitCallExpr(Call expr);
+    R VisitLambdaExpr(Lambda expr);
     R VisitGroupingExpr(Grouping expr);
     R VisitLiteralExpr(Literal expr);
     R VisitLogicalExpr(Logical expr);
     R VisitUnaryExpr(Unary expr);
     R VisitVariableExpr(Variable expr);
-}
-
-public class Assign: Expr {
-    public Token name;
-    public Expr value;
-    public Assign(Token name, Expr value) {
-        this.name = name;
-        this.value = value;
-    }
-    public override R Accept<R>(IVisitor<R> visitor) {
-        return visitor.VisitAssignExpr(this);
-    }
 }
 
 public class Ternary: Expr {
@@ -41,6 +30,18 @@ public class Ternary: Expr {
     }
     public override R Accept<R>(IVisitor<R> visitor) {
         return visitor.VisitTernaryExpr(this);
+    }
+}
+
+public class Assign: Expr {
+    public Token name;
+    public Expr value;
+    public Assign(Token name, Expr value) {
+        this.name = name;
+        this.value = value;
+    }
+    public override R Accept<R>(IVisitor<R> visitor) {
+        return visitor.VisitAssignExpr(this);
     }
 }
 
@@ -69,6 +70,18 @@ public class Call: Expr {
     }
     public override R Accept<R>(IVisitor<R> visitor) {
         return visitor.VisitCallExpr(this);
+    }
+}
+
+public class Lambda: Expr {
+    public List<Token> parameters;
+    public List<Stmt.Stmt> body;
+    public Lambda(List<Token> parameters, List<Stmt.Stmt> body) {
+        this.parameters = parameters;
+        this.body = body;
+    }
+    public override R Accept<R>(IVisitor<R> visitor) {
+        return visitor.VisitLambdaExpr(this);
     }
 }
 
@@ -127,3 +140,6 @@ public class Variable: Expr {
         return visitor.VisitVariableExpr(this);
     }
 }
+
+
+

@@ -18,7 +18,7 @@ public class Interpreter: Expr.IVisitor<object?>, Stmt.IVisitor {
                 string arg = Stringify(arguments[0]);
                 Console.WriteLine(arg);
                 return arg;
-        }));
+            }));
         this.environment = globals;
     }
     public void Interpret(List<Stmt.Stmt> statements) {
@@ -126,6 +126,9 @@ public class Interpreter: Expr.IVisitor<object?>, Stmt.IVisitor {
             value = Evaluate(stmt.value);
         }
         throw new Return(value);
+    }
+    public object? VisitLambdaExpr(Expr.Lambda expr) {
+        return new Lambda(expr, environment);
     }
     public object? VisitLogicalExpr(Expr.Logical expr) {
         object? left = Evaluate(expr.left);

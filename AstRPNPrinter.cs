@@ -15,6 +15,9 @@ public class AstRPNPrinter: Expr.IVisitor<String> {
         builder.Append(name);
         return builder.ToString();
     }
+    public string VisitLambdaExpr(Expr.Lambda expr) {
+        return "lambda";
+    }
     public string VisitCallExpr(Expr.Call expr) {
         return RPNPrint(expr.callee.Accept(this), expr.arguments.ToArray());
     }

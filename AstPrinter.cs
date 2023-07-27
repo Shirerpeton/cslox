@@ -83,7 +83,14 @@ public class AstPrinter: Expr.IVisitor<String>, Stmt.IVisitor {
         builder.Append(")");
         return builder.ToString();
     }
-
+    public string VisitLambdaExpr(Expr.Lambda expr) {
+        string parameters = string.Join(' ', expr.parameters.Select(p => p.lexeme));
+        Console.WriteLine($"(lambda {parameters} (");
+        foreach(var stmt in expr.body) {
+            stmt.Accept(this);
+        }
+        return $")";
+    }
     public string VisitTernaryExpr(Expr.Ternary expr) {
         return Parenthesize(expr.opr.lexeme, new Expr.Expr[] { expr.first, expr.second, expr.third });
     }
