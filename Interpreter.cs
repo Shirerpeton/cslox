@@ -2,7 +2,8 @@ namespace cslox;
 
 public class Interpreter: Expr.IVisitor<object?>, Stmt.IVisitor {
     readonly IErrorReporter errorReporter;
-    public Environment globals = new Environment();
+    readonly Dictionary<Expr.Expr, int> locals = new Dictionary<Expr.Expr, int>();
+    readonly Environment globals = new Environment();
     Environment environment;
     public Interpreter(IErrorReporter errorReporter) {
         this.errorReporter = errorReporter;
@@ -12,6 +13,9 @@ public class Interpreter: Expr.IVisitor<object?>, Stmt.IVisitor {
             }
         ));
         this.environment = globals;
+    }
+    public void Resolve(Expr.Expr expr, int depth) {
+        locals.Add(expr, depth);
     }
     public void Interpret(List<Stmt.Stmt> statements) {
         try {
@@ -96,11 +100,22 @@ public class Interpreter: Expr.IVisitor<object?>, Stmt.IVisitor {
     }
     public object? VisitAssignExpr(Expr.Assign expr) {
         object? value = Evaluate(expr.value);
-        environment.Assign(expr.name, value);
+        if(locals.TryGetValue(expr, out int distance)) {
+            environment.AssignAt(distance, expr.name, value);
+        } else {
+            globals.Assign(expr.name, value);
+        }
         return value;
     }
     public object? VisitVariableExpr(Expr.Variable expr) {
-        return environment.Get(expr.name);
+        return LookUpVariable(expr.name, expr);
+    }
+    object? LookUpVariable(Token name, Expr.Expr expr) {
+        if(locals.TryGetValue(expr, out int distance)) {
+            return environment.GetAt(distance, name.lexeme);
+        } else {
+            return globals.Get(name);
+        }
     }
     public object? VisitLiteralExpr(Expr.Literal expr) {
         return expr.value;

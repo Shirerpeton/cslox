@@ -57,6 +57,8 @@ static class Program {
         //var printer = new AstPrinter();
         //printer.Print(statements);
         Interpreter interpreter = new Interpreter(errorReporter);
+        var resolver = new Resolver(errorReporter, interpreter);
+        resolver.Resolve(statements);
         interpreter.Interpret(statements);
     }
 }
